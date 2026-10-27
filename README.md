@@ -1,173 +1,118 @@
-# AI Customer Support Coaching Assistant
+# AI Customer Support Coaching Assistant — Milestone 1
 
-A team project built during the Infosys Springboard Virtual Internship 7.0.
+An AI-powered coaching and practice assistant for frontline customer support teams.
 
-The application helps customer support employees practice and improve their
-responses through live coaching, real-time escalation-risk assessment, and
-a knowledge base built from uploaded support documents.
+Milestone 1 delivers the foundational architecture, persistent session configuration, and local offline Retrieval-Augmented Generation (RAG) knowledge base indexing.
 
 ---
 
-## Project status
+## Application Screenshots (1080p, 100% Zoom)
 
-| Module | Member | Branch | Status |
-|---|---|---|---|
-| Shared data models | Member 1 | `feature/data-model-validation` | ✅ Complete |
-| Streamlit frontend | Member 2 | `feature/streamlit-ui` | ✅ Complete |
-| Session manager | Member 3 | `feature/session-manager` | ✅ Complete |
-| Orchestrator | Member 4 | `feature/orchestrator` | ✅ Complete |
-| Mock agent | Member 5 | `feature/mock-agent` | ✅ Complete |
-| Testing | Member 6 | `feature/testing` | In progress |
-| RAG pipeline | — | `feature/rag-pipeline` | ✅ Complete |
+### 1. Dashboard View (Single-Screen Fit)
+![Dashboard View](docs/screenshots/dashboard.png)
+*Compact 4-metric stat cards, tabbed Support Knowledge Base (Upload, Documents, Test Retrieval, Quality), and Session Setup with scenario presets, live character counters, and readiness checklist.*
 
----
+### 2. Sessions Management View
+![Sessions View](docs/screenshots/sessions.png)
+*Directory of all saved sessions sorted newest first, readable two-column summary card with scenario quote blocks, and export actions (Download JSON and safe delete with confirmation).*
 
-## Features
-
-- **Three interaction modes:** Simulator (AI customer), Manual (paste messages), Replay (replay a transcript).
-- **Knowledge base:** Upload support PDFs → chunked, indexed, top-3 relevant chunks retrieved per customer message with source filenames.
-- **Live coaching console:** Sentiment, intent, escalation risk, suggested replies, tone scoring.
-- **Session persistence:** Sessions saved to `data/sessions/` and restored after a browser refresh via the `?sid=` URL parameter.
-- **Orchestrator:** Central workflow coordinator with Pydantic validation and clean error handling.
-- **Post-session report:** Sentiment journey chart, peak escalation risk, coaching recommendations.
+### 3. Architecture & Multi-Agent Design View
+![Architecture View](docs/screenshots/architecture.png)
+*Interactive Graphviz flow topology, 6-agent milestone matrix (M2/M3/M4), domain models inspected via `inspect.getsource`, and dedicated study notes & engineering decision tabs.*
 
 ---
 
-## Technology stack
+## Knowledge Base & Dense Retrieval Benchmark
 
-| Component | Technology |
-|---|---|
-| Frontend | Streamlit ≥ 1.35 |
-| Data validation | Pydantic v2 |
-| PDF extraction | pypdf ≥ 5.0 |
-| Knowledge retrieval | BM25 TF-IDF (standalone) |
-| Session persistence | JSON files (`data/sessions/`) |
-| Vector DB (future) | ChromaDB + ONNX all-MiniLM-L6-v2 |
-| Session database (future) | SQLite (`data/customer_support.db`) |
-| Testing | pytest ≥ 9.0 |
-| Python | 3.11+ |
+The RAG pipeline operates locally using **SentenceTransformers (`all-MiniLM-L6-v2`)** and a persistent **ChromaDB (`PersistentClient`)** vector store with cosine distance.
 
----
+### Sample Document Ingestion
+| Document Name | File Size | Characters | Pages | Chunks Indexed | Explanation |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| `account_and_password_faq.pdf` | 13.9 KB | 903 | 2 | **3 chunks** | Page 1 (515 chars) yields 2 chunks (0–500, 450–515); Page 2 (388 chars) yields 1 chunk. |
+| `returns_and_refunds.pdf` | 13.5 KB | 644 | 1 | **2 chunks** | Total text is 644 chars; 500-char window with 50-char overlap yields 2 chunks ($450 + 194 = 644$). |
+| `shipping_and_delivery.pdf` | 13.8 KB | 775 | 2 | **2 chunks** | Page 1 has 390 chars, Page 2 has 385 chars. Both are $<500$ chars, producing 1 chunk per page. |
+| **Total Knowledge Base** | — | **2,322** | **5** | **7 chunks** | **100% Deduplicated (deterministic SHA-256 chunk IDs)** |
 
-## Repository structure
-
-```
-customer-support-coach/
-├── app.py                          ← Streamlit entry point
-├── requirements.txt
-├── run_demo.py                     ← Orchestrator CLI demo
-├── .streamlit/
-│   └── config.toml                 ← Theme + upload size config
-├── orchestrator/                   ← Member 4
-│   ├── orchestrator.py             ← run_workflow()
-│   ├── schemas.py                  ← WorkflowRequest / WorkflowResponse
-│   ├── mock_components.py
-│   └── __init__.py
-├── src/
-│   └── customer_support_coach/     ← Member 1
-│       ├── data_models.py
-│       └── __init__.py
-├── utils/                          ← Member 2
-│   ├── storage.py                  ← Session persistence
-│   ├── rag_stub.py                 ← PDF ingestion + retrieval
-│   ├── validation.py               ← Form validation
-│   └── pipeline_stub.py            ← Coaching analysis
-├── views/                          ← Member 2
-│   ├── setup.py                    ← Setup page
-│   ├── console.py                  ← Live coaching console
-│   └── report.py                   ← Post-session report
-├── docs/
-│   ├── architecture.md             ← Architecture diagram
-│   └── orchestrator_integration.md ← Orchestrator contract
-├── data/
-│   └── sample_pdfs/                ← Sample PDFs for demo
-└── tests/
-    └── test_orchestrator.py        ← 11 orchestrator tests
-```
+### Ground-Truth Retrieval Benchmark
+Retrieval evaluation is automated via `evaluate_retrieval(k=3)` using `data/eval/retrieval_eval.json`:
+- **Total Ground-Truth Queries:** 10
+- **Hit@1 Accuracy:** **10/10 (100.0%)** (correct document ranked #1 for every query)
+- **Hit@3 Accuracy:** **10/10 (100.0%)** (exceeds the $\ge 80\%$ target)
+- **Total Misses:** **0**
 
 ---
 
-## Setup
+## Features (Milestone 1)
 
+- **Single-Screen Fit:** Optimized at 100% zoom on 1920×1080 (usable height ~940px). Stat cards, Knowledge Base card, Session Setup card, and the Start button fit without vertical scrolling.
+- **Per-Page Theming:** Active sidebar pill, selectbox backgrounds, expanders, and table headers dynamically adopt the current page's pastel palette:
+  - **Dashboard:** Rose (`#C2347A`, tint `#FDE7F1`)
+  - **Sessions:** Lavender (`#6D5BD0`, tint `#ECE8FB` — zero pink)
+  - **Architecture:** Mint (`#0E9F8E`, tint `#DDF5F1`)
+- **Knowledge Base Tabs:**
+  - **Upload:** Multi-PDF uploader, 20 MB size guard, scanned PDF text validation, Ingest & Clear buttons.
+  - **Documents:** Tabular view of indexed documents (File, Pages, Chunks) and live chunk preview.
+  - **Test Retrieval:** Keyword search with doc name/page badges, visual cosine score bar, and highlighted keywords.
+  - **Quality:** One-click evaluation suite displaying Queries, Hit@1 rate, Hit@3 rate, and misses table.
+- **Session Setup & Flat Schema:**
+  - **Preset Scenarios:** "Load example" selectbox with 3 preset customer issues matching bundled policy documents.
+  - **Live Character Counters:** Real-time character counts under Product Context ($x/100$) and Customer Scenario ($x/500$).
+  - **Replay Preview:** Renders uploaded transcripts as native chat bubbles with message count verification.
+  - **Readiness Checklist:** Live checks (KB chunks $\ge 1$, Product valid, Scenario valid, Mode valid) with visual green ticks.
+  - **Post-Start Success Card:** Summary card with direct "Download Session JSON" button and toast notification.
+- **Tolerant Schema Migration:** Backward-compatible normalization converts legacy nested session JSON files into the new flat schema on read.
+
+---
+
+## Setup & Installation
+
+### Prerequisites
+- Python 3.11, 3.12, 3.13, or 3.14
+- Recommended: Virtual environment (`venv`)
+
+### 1. Clone & Setup Virtual Environment
 ```bash
-# Clone and enter the repository
 git clone https://github.com/spoorti08b-lgtm/customer-support-coach.git
 cd customer-support-coach
-git checkout feature/orchestrator
 
-# (Recommended) create a virtual environment
 python -m venv .venv
-.venv\Scripts\activate    # Windows
-# source .venv/bin/activate  # Linux / macOS
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+# source .venv/bin/activate
+```
 
-# Install dependencies
+### 2. Install Dependencies
+```bash
 pip install -r requirements.txt
 ```
 
 ---
 
-## Running the application
+## How to Run the Application
 
-**Terminal 1 — Start the Streamlit app:**
-
-```bash
-streamlit run app.py
-```
-
-Open **http://localhost:8501** in your browser.
-
----
-
-## Quick workflow
-
-1. Open the setup page → upload one or more PDFs → click **Ingest PDFs**.
-2. Select an interaction mode (Simulator / Manual / Replay).
-3. Fill in product context and customer scenario → click **Start coaching session**.
-4. In the console: add or receive customer messages and watch the coaching panel.
-5. Click **End session** → view the post-session report.
-6. Refresh the browser — the session restores automatically from the URL.
-
----
-
-## Running the orchestrator demo
+Start the Streamlit application on port 8502:
 
 ```bash
-py -3 run_demo.py
+streamlit run app.py --server.port 8502
 ```
 
-Runs four scenarios: successful workflow, schema validation rejection,
-missing session, and agent failure.
+Navigate to **http://localhost:8502** in your browser.
 
 ---
 
-## Running the tests
+## Running Automated Tests
+
+Run pytest across all unit tests and milestone verification suites:
 
 ```bash
-py -3 -m pytest tests/test_orchestrator.py -v
+# Run Milestone 1 tests (includes deduplication, RAG retrieval, migration, and Hit@3 >= 80%)
+python -m pytest tests/test_m1.py -v
+
+# Run orchestrator contract tests
+python -m pytest tests/test_orchestrator.py -v
+
+# Run end-to-end smoke test
+python smoke_test.py
 ```
-
-All 11 tests pass. No external services are required.
-
----
-
-## Architecture
-
-See [`docs/architecture.md`](docs/architecture.md) for the full system diagram.
-
----
-
-## Integration
-
-See [`docs/orchestrator_integration.md`](docs/orchestrator_integration.md)
-for the interfaces that the session manager and agent must implement.
-
----
-
-## Current limitations
-
-- The knowledge base uses BM25 (keyword matching). ChromaDB + semantic embeddings
-  are implemented in `feature/rag-pipeline` and will be merged in a later milestone.
-- The coaching analysis (`pipeline_stub.py`) uses rule-based heuristics.
-  A real LLM agent will replace it in a later milestone.
-- The SQLite session manager (`feature/session-manager`) is not yet merged;
-  sessions are currently stored as JSON files in `data/sessions/`.

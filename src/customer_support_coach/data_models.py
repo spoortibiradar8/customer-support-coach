@@ -102,77 +102,84 @@ def _normalize_enum(enum_type: type[Enum], value: Any, field_name: str):
 
 @dataclass
 class Session:
-    """Represents one customer-support training session."""
-
-    mode: InteractionMode = InteractionMode.SIMULATOR
-    product_context: dict[str, Any] = field(default_factory=dict)
-    scenario: dict[str, Any] | str | None = None
-    customer_persona: dict[str, Any] | str | None = None
-    status: SessionStatus = SessionStatus.ACTIVE
+    """Represents one customer-support training session (flat Milestone 1 schema)."""
 
     session_id: str = field(
-        default_factory=lambda: f"sess-{uuid.uuid4().hex}"
+        default_factory=lambda: f"sess-{uuid.uuid4().hex[:8]}"
     )
-    created_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
+    mode: InteractionMode | str = "Simulator"
+    product: str = "Acme Online Store"
+    scenario: str | None = None
+    persona: str | None = None
+    max_turns: int | None = None
+    replay_transcript: list[dict[str, str]] | None = None
+    kb_documents: list[str] = field(default_factory=list)
+    status: str = "configured"
+    created_at: str | datetime = field(
+        default_factory=lambda: datetime.now().astimezone().isoformat(timespec="seconds")
     )
-    updated_at: datetime = field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+
+    # Legacy fields accepted for backward compatibility with orchestrator / tests
+    product_context: dict[str, Any] | None = None
+    customer_persona: str | None = None
+    updated_at: datetime | str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
         self.session_id = validate_id(self.session_id, "session_id")
-        self.mode = _normalize_enum(InteractionMode, self.mode, "mode")
-        self.status = _normalize_enum(SessionStatus, self.status, "status")
-        self.product_context = validate_json_object(
-            self.product_context, "product_context"
-        )
-        self.metadata = validate_json_object(self.metadata, "metadata")
 
-        if isinstance(self.scenario, str):
-            self.scenario = validate_text(self.scenario, "scenario")
-        elif isinstance(self.scenario, dict):
-            self.scenario = validate_json_object(self.scenario, "scenario")
-        elif self.scenario is not None:
-            raise ValidationError(
-                "scenario must be a string, dictionary, or None."
-            )
+        if isinstance(self.mode, InteractionMode):
+            mode_str = self.mode.value.capitalize()
+        else:
+            mode_str = str(self.mode).capitalize()
+        if mode_str in ("Simulator", "Manual", "Replay"):
+            self.mode = mode_str
+        else:
+            self.mode = "Simulator"
 
-        if self.mode == InteractionMode.SIMULATOR and self.scenario is None:
-            raise ValidationError("scenario is required in simulator mode.")
+        if self.product_context and isinstance(self.product_context, dict):
+            if not self.product or self.product == "Acme Online Store":
+                self.product = self.product_context.get("product", self.product)
 
-        if isinstance(self.customer_persona, str):
-            self.customer_persona = validate_text(
-                self.customer_persona, "customer_persona"
-            )
-        elif isinstance(self.customer_persona, dict):
-            self.customer_persona = validate_json_object(
-                self.customer_persona, "customer_persona"
-            )
-        elif self.customer_persona is not None:
-            raise ValidationError(
-                "customer_persona must be a string, dictionary, or None."
-            )
+        if not self.persona:
+            if self.customer_persona:
+                self.persona = str(self.customer_persona)
+            elif self.metadata and "persona" in self.metadata:
+                self.persona = str(self.metadata["persona"])
 
-        self.created_at = validate_timestamp(self.created_at, "created_at")
-        self.updated_at = validate_timestamp(self.updated_at, "updated_at")
+        if self.mode == "Simulator":
+            if not self.persona:
+                self.persona = "Calm"
+            if not self.max_turns:
+                self.max_turns = self.metadata.get("max_turns", 5) if self.metadata else 5
+        else:
+            self.persona = None
+            self.max_turns = None
 
-        if self.updated_at < self.created_at:
-            raise ValidationError("updated_at cannot precede created_at.")
+        if self.mode == "Replay":
+            if self.replay_transcript is None and self.metadata and "replay_script" in self.metadata:
+                self.replay_transcript = self.metadata["replay_script"]
+        else:
+            self.replay_transcript = None
+
+        if isinstance(self.created_at, datetime):
+            self.created_at = self.created_at.astimezone().isoformat(timespec="seconds")
+        elif not isinstance(self.created_at, str):
+            self.created_at = datetime.now().astimezone().isoformat(timespec="seconds")
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert the session into JSON-compatible data."""
+        """Convert the session into JSON conforming to the flat schema."""
         return {
             "session_id": self.session_id,
-            "mode": self.mode.value,
-            "product_context": self.product_context,
+            "mode": self.mode,
+            "product": self.product,
             "scenario": self.scenario,
-            "customer_persona": self.customer_persona,
-            "status": self.status.value,
-            "created_at": self.created_at.isoformat(),
-            "updated_at": self.updated_at.isoformat(),
-            "metadata": self.metadata,
+            "persona": self.persona,
+            "max_turns": self.max_turns,
+            "replay_transcript": self.replay_transcript,
+            "kb_documents": list(self.kb_documents),
+            "status": "configured",
+            "created_at": self.created_at,
         }
 
 

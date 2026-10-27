@@ -1,5 +1,7 @@
-
-streamlit>=1.35
-pypdf>=5.0,<6
+streamlit>=1.46
+pypdf
+chromadb
+sentence-transformers
 pydantic>=2.0
-pytest>=9.0
+pandas
+pytest

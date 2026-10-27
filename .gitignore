@@ -1,4 +1,3 @@
-
 # Python
 __pycache__/
 *.py[cod]
@@ -12,8 +11,8 @@ coverage.xml
 *.cover
 
 # Virtual environments
+venv*/
 .venv/
-venv/
 env/
 
 # Environment variables and secrets
@@ -36,16 +35,25 @@ build/
 dist/
 *.egg-info/
 
-# Local databases
+# Local databases & Runtime Data
 *.db
 *.sqlite
 *.sqlite3/
-
-# Generated application data
-chroma_db/
-data/sessions/
+data/chroma/
+data/sessions/*.json
+!data/sessions/.gitkeep
 data/kb_index.json
+chroma_db/
 data/rag/
+
+# Runtime-generated test fixtures (created by run_full_audit.py)
+data/test_temp/
+
+# Root-level screenshot artifacts (committed copies live in docs/screenshots/)
+screenshot_*.png
+
+# Backups flagged for removal
+undo_backup/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
