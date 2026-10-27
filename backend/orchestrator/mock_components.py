@@ -2,11 +2,8 @@ import logging
 import sys
 from pathlib import Path
 
-# Allow importing from src/ without installing the package.
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
-from customer_support_coach.data_models import (
+from backend.core.data_models import (
     AgentResult,
     InteractionMode,
     Session,

@@ -4,7 +4,7 @@ Team integration: replace these functions with real agents while keeping
 the returned dictionary keys consistent.
 """
 
-from utils import rag_stub
+from backend.services import rag_stub
 
 
 NEG = [

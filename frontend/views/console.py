@@ -2,9 +2,9 @@
 
 import streamlit as st
 
-from utils import pipeline_stub as pipe
-from utils import rag_stub, storage
-from utils.validation import validate_message
+from backend.services import pipeline_stub as pipe
+from backend.services import rag_stub, storage
+from backend.services.validation import validate_message
 
 
 # Show a prominent warning when escalation risk reaches this value.

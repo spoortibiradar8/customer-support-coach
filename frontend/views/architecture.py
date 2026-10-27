@@ -7,10 +7,11 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-from customer_support_coach import data_models
+from backend.core import data_models
+from backend.config import DOCS_DIR
 
-STUDY_NOTES_PATH = Path(__file__).resolve().parent.parent / "docs" / "study_notes.md"
-DESIGN_DECISIONS_PATH = Path(__file__).resolve().parent.parent / "docs" / "design_decisions.md"
+STUDY_NOTES_PATH = DOCS_DIR / "study_notes.md"
+DESIGN_DECISIONS_PATH = DOCS_DIR / "design_decisions.md"
 
 
 def render_graphviz_diagram() -> None:
@@ -157,7 +158,7 @@ def render() -> None:
 
     with tab_models:
         st.markdown('<div class="card-title">Domain Data Models (`data_models.py`)</div>', unsafe_allow_html=True)
-        st.caption("Source code inspected directly from `src/customer_support_coach/data_models.py` via `inspect.getsource`.")
+        st.caption("Source code inspected directly from `backend/core/data_models.py` via `inspect.getsource`.")
 
         model_classes = [
             ("Session", data_models.Session),

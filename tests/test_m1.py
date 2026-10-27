@@ -1,4 +1,4 @@
-"""Automated tests for Milestone 1 requirements.
+﻿"""Automated tests for Milestone 1 requirements.
 
 Covers chunking length and overlap, PDF deduplication, vector retrieval,
 session persistence, and transcript parsing.
@@ -9,8 +9,8 @@ from __future__ import annotations
 import pathlib
 import pytest
 
-from src.customer_support_coach.data_models import InteractionMode, Session
-from utils import rag_stub, storage, validation
+from backend.core.data_models import InteractionMode, Session
+from backend.services import rag_stub, storage, validation
 
 
 class FakePdf:

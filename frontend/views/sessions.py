@@ -7,7 +7,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 
-from utils import storage
+from backend.services import storage
 
 
 def _format_created(ts_str: str) -> str:

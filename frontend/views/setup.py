@@ -6,11 +6,12 @@ import re
 from pathlib import Path
 import streamlit as st
 
-from orchestrator import orchestrator
-from customer_support_coach.data_models import Session
-from utils import rag_stub, storage, validation
+from backend.orchestrator import orchestrator
+from backend.core.data_models import Session
+from backend.services import rag_stub, storage, validation
+from backend.config import REPLAY_SAMPLE_PATH
 
-REPLAY_DEMO_PATH = Path(__file__).resolve().parent.parent / "samples" / "replay_demo.txt"
+REPLAY_DEMO_PATH = REPLAY_SAMPLE_PATH
 
 PRESETS = {
     "Double charge refund": {

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Automated tests for the orchestrator workflow.
 
 Run from the project root:
@@ -15,12 +15,11 @@ import pytest
 from pydantic import ValidationError
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from orchestrator.mock_components import MockAgent, MockSessionManager
-from orchestrator.orchestrator import run_workflow
-from orchestrator.schemas import WorkflowRequest, WorkflowResponse
+from backend.orchestrator.mock_components import MockAgent, MockSessionManager
+from backend.orchestrator.orchestrator import run_workflow
+from backend.orchestrator.schemas import WorkflowRequest, WorkflowResponse
 
 
 # ---------------------------------------------------------------------------

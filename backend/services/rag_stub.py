@@ -17,14 +17,19 @@ from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 import streamlit as st
 
-# Data directory configuration
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = BASE_DIR / "data"
-CHROMA_DIR = DATA_DIR / "chroma"
-EVAL_PATH = DATA_DIR / "eval" / "retrieval_eval.json"
-COLLECTION_NAME = "support_kb"
-MODEL_NAME = "all-MiniLM-L6-v2"
-MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024  # 20 MB
+from backend.config import (
+    CHROMA_COLLECTION_NAME,
+    CHROMA_DIR,
+    DATA_DIR,
+    EMBEDDING_MODEL_NAME,
+    EVAL_PATH,
+    MAX_PDF_SIZE_BYTES,
+    SAMPLE_PDFS_DIR,
+)
+
+COLLECTION_NAME = CHROMA_COLLECTION_NAME
+MODEL_NAME = EMBEDDING_MODEL_NAME
+MAX_FILE_SIZE_BYTES = MAX_PDF_SIZE_BYTES
 
 
 @st.cache_resource(show_spinner=False)
@@ -270,7 +275,7 @@ def delete_document(doc_name: str) -> bool:
 
 def load_sample_pdfs() -> dict[str, Any]:
     """Ingest every PDF in data/sample_pdfs/ skipping ones already indexed."""
-    sample_dir = DATA_DIR / "sample_pdfs"
+    sample_dir = SAMPLE_PDFS_DIR
     if not sample_dir.exists():
         return {"added": 0, "skipped": 0, "files": []}
 

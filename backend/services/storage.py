@@ -12,7 +12,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-DIR = Path(__file__).resolve().parent.parent / "data" / "sessions"
+from backend.config import SESSIONS_DIR
+
+DIR = SESSIONS_DIR
 
 
 def new_id() -> str:

@@ -35,7 +35,7 @@ The RAG pipeline operates locally using **SentenceTransformers (`all-MiniLM-L6-v
 | **Total Knowledge Base** | — | **2,322** | **5** | **7 chunks** | **100% Deduplicated (deterministic SHA-256 chunk IDs)** |
 
 ### Ground-Truth Retrieval Benchmark
-Retrieval evaluation is automated via `evaluate_retrieval(k=3)` using `data/eval/retrieval_eval.json`:
+Retrieval evaluation is automated via `evaluate_retrieval(k=3)` using `data/evaluation/retrieval_eval.json`:
 - **Total Ground-Truth Queries:** 10
 - **Hit@1 Accuracy:** **10/10 (100.0%)** (correct document ranked #1 for every query)
 - **Hit@3 Accuracy:** **10/10 (100.0%)** (exceeds the $\ge 80\%$ target)
@@ -73,7 +73,7 @@ Retrieval evaluation is automated via `evaluate_retrieval(k=3)` using `data/eval
 
 ### 1. Clone & Setup Virtual Environment
 ```bash
-git clone https://github.com/spoorti08b-lgtm/customer-support-coach.git
+git clone https://github.com/spoortibiradar8/customer-support-coach.git
 cd customer-support-coach
 
 python -m venv .venv
@@ -95,7 +95,7 @@ pip install -r requirements.txt
 Start the Streamlit application on port 8502:
 
 ```bash
-streamlit run app.py --server.port 8502
+streamlit run frontend/app.py --server.port 8502
 ```
 
 Navigate to **http://localhost:8502** in your browser.

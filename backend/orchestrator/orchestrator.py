@@ -7,11 +7,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-
-from customer_support_coach.data_models import AgentResult
-from orchestrator.schemas import WorkflowRequest, WorkflowResponse
+from backend.core.data_models import AgentResult
+from backend.orchestrator.schemas import WorkflowRequest, WorkflowResponse
 
 logger = logging.getLogger(__name__)
 

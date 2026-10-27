@@ -5,14 +5,14 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# Ensure src/ package is importable regardless of working directory
-sys.path.insert(0, str(Path(__file__).resolve().parent / "src"))
+# Bootstrap repository root into sys.path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import streamlit as st
 
-from utils import rag_stub, storage
-from utils.theme import PAGE_THEMES, apply_theme
-from views import architecture, sessions, setup
+from backend.services import rag_stub, storage
+from frontend.theme import PAGE_THEMES, apply_theme
+from frontend.views import architecture, sessions, setup
 
 # Configure Streamlit page settings
 st.set_page_config(

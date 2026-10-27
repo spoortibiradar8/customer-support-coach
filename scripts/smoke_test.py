@@ -18,16 +18,16 @@ if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
     except Exception:
         pass
 
-PROJECT_ROOT = pathlib.Path(__file__).resolve().parent
-sys.path.insert(0, str(PROJECT_ROOT / "src"))
-sys.path.insert(0, str(PROJECT_ROOT))
+# Bootstrap repository root into sys.path
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
 
 print("1. Checking module imports...")
-from customer_support_coach.data_models import InteractionMode, Session
-from orchestrator import run_workflow, WorkflowRequest, WorkflowResponse
-from orchestrator.mock_components import MockAgent, MockSessionManager
-from utils import pipeline_stub, rag_stub, storage, validation
-from views import architecture, console, report, sessions, setup
+from backend.config import SAMPLE_PDFS_DIR
+from backend.core.data_models import InteractionMode, Session
+from backend.orchestrator import run_workflow, WorkflowRequest, WorkflowResponse
+from backend.orchestrator.mock_components import MockAgent, MockSessionManager
+from backend.services import pipeline_stub, rag_stub, storage, validation
+from frontend.views import architecture, console, report, sessions, setup
 
 print("   [OK] All modules imported successfully.")
 
@@ -45,7 +45,7 @@ class FakePdf:
         return self._data
 
 
-sample_dir = pathlib.Path("data/sample_pdfs")
+sample_dir = SAMPLE_PDFS_DIR
 pdf_paths = sorted(sample_dir.glob("*.pdf"))
 pdf_files = [FakePdf(p) for p in pdf_paths]
 
