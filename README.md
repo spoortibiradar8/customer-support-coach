@@ -1,118 +1,244 @@
-# AI Customer Support Coaching Assistant — Milestone 1
+# 🤖 Customer Simulator Agent (CSA)
 
-An AI-powered coaching and practice assistant for frontline customer support teams.
-
-Milestone 1 delivers the foundational architecture, persistent session configuration, and local offline Retrieval-Augmented Generation (RAG) knowledge base indexing.
+> An Affective Dialogue Simulator that generates realistic, scenario-consistent customer messages turn-by-turn with configurable personas and dynamic emotional progression.
 
 ---
 
-## Application Screenshots (1080p, 100% Zoom)
+## 🌟 Overview
 
-### 1. Dashboard View (Single-Screen Fit)
-![Dashboard View](docs/screenshots/dashboard.png)
-*Compact 4-metric stat cards, tabbed Support Knowledge Base (Upload, Documents, Test Retrieval, Quality), and Session Setup with scenario presets, live character counters, and readiness checklist.*
+The **Customer Simulator Agent (CSA)** is designed for training customer service teams, evaluating LLM support bots, benchmarking conversational policies, and conducting realistic red-teaming.
 
-### 2. Sessions Management View
-![Sessions View](docs/screenshots/sessions.png)
-*Directory of all saved sessions sorted newest first, readable two-column summary card with scenario quote blocks, and export actions (Download JSON and safe delete with confirmation).*
-
-### 3. Architecture & Multi-Agent Design View
-![Architecture View](docs/screenshots/architecture.png)
-*Interactive Graphviz flow topology, 6-agent milestone matrix (M2/M3/M4), domain models inspected via `inspect.getsource`, and dedicated study notes & engineering decision tabs.*
+Unlike static prompt templates, CSA features a **continuous affective state machine** where customer emotions (frustration, trust, satisfaction, arousal) evolve dynamically based on the support agent's actions, conversational empathy, procedural friction, and patience decay.
 
 ---
 
-## Knowledge Base & Dense Retrieval Benchmark
+## 🏗️ Core Architectural Pillars
 
-The RAG pipeline operates locally using **SentenceTransformers (`all-MiniLM-L6-v2`)** and a persistent **ChromaDB (`PersistentClient`)** vector store with cosine distance.
-
-### Sample Document Ingestion
-| Document Name | File Size | Characters | Pages | Chunks Indexed | Explanation |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| `account_and_password_faq.pdf` | 13.9 KB | 903 | 2 | **3 chunks** | Page 1 (515 chars) yields 2 chunks (0–500, 450–515); Page 2 (388 chars) yields 1 chunk. |
-| `returns_and_refunds.pdf` | 13.5 KB | 644 | 1 | **2 chunks** | Total text is 644 chars; 500-char window with 50-char overlap yields 2 chunks ($450 + 194 = 644$). |
-| `shipping_and_delivery.pdf` | 13.8 KB | 775 | 2 | **2 chunks** | Page 1 has 390 chars, Page 2 has 385 chars. Both are $<500$ chars, producing 1 chunk per page. |
-| **Total Knowledge Base** | — | **2,322** | **5** | **7 chunks** | **100% Deduplicated (deterministic SHA-256 chunk IDs)** |
-
-### Ground-Truth Retrieval Benchmark
-Retrieval evaluation is automated via `evaluate_retrieval(k=3)` using `data/evaluation/retrieval_eval.json`:
-- **Total Ground-Truth Queries:** 10
-- **Hit@1 Accuracy:** **10/10 (100.0%)** (correct document ranked #1 for every query)
-- **Hit@3 Accuracy:** **10/10 (100.0%)** (exceeds the $\ge 80\%$ target)
-- **Total Misses:** **0**
-
----
-
-## Features (Milestone 1)
-
-- **Single-Screen Fit:** Optimized at 100% zoom on 1920×1080 (usable height ~940px). Stat cards, Knowledge Base card, Session Setup card, and the Start button fit without vertical scrolling.
-- **Per-Page Theming:** Active sidebar pill, selectbox backgrounds, expanders, and table headers dynamically adopt the current page's pastel palette:
-  - **Dashboard:** Rose (`#C2347A`, tint `#FDE7F1`)
-  - **Sessions:** Lavender (`#6D5BD0`, tint `#ECE8FB` — zero pink)
-  - **Architecture:** Mint (`#0E9F8E`, tint `#DDF5F1`)
-- **Knowledge Base Tabs:**
-  - **Upload:** Multi-PDF uploader, 20 MB size guard, scanned PDF text validation, Ingest & Clear buttons.
-  - **Documents:** Tabular view of indexed documents (File, Pages, Chunks) and live chunk preview.
-  - **Test Retrieval:** Keyword search with doc name/page badges, visual cosine score bar, and highlighted keywords.
-  - **Quality:** One-click evaluation suite displaying Queries, Hit@1 rate, Hit@3 rate, and misses table.
-- **Session Setup & Flat Schema:**
-  - **Preset Scenarios:** "Load example" selectbox with 3 preset customer issues matching bundled policy documents.
-  - **Live Character Counters:** Real-time character counts under Product Context ($x/100$) and Customer Scenario ($x/500$).
-  - **Replay Preview:** Renders uploaded transcripts as native chat bubbles with message count verification.
-  - **Readiness Checklist:** Live checks (KB chunks $\ge 1$, Product valid, Scenario valid, Mode valid) with visual green ticks.
-  - **Post-Start Success Card:** Summary card with direct "Download Session JSON" button and toast notification.
-- **Tolerant Schema Migration:** Backward-compatible normalization converts legacy nested session JSON files into the new flat schema on read.
-
----
-
-## Setup & Installation
-
-### Prerequisites
-- Python 3.11, 3.12, 3.13, or 3.14
-- Recommended: Virtual environment (`venv`)
-
-### 1. Clone & Setup Virtual Environment
-```bash
-git clone https://github.com/spoortibiradar8/customer-support-coach.git
-cd customer-support-coach
-
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-# source .venv/bin/activate
+```mermaid
+flowchart TD
+    AgentMsg["Support Agent Message"] --> TriggerDetect["Behavioral Trigger Detector<br/>(Empathy, Policy Shield, Repetition, Resolution)"]
+    TriggerDetect --> AffectiveEngine["Affective State Machine<br/>(Frustration, Trust, Satisfaction, Arousal)"]
+    ScenarioGroundTruth["Scenario Ground Truth<br/>(Order #, Private Facts, Goals)"] --> DisclosureCheck["Progressive Disclosure Evaluator"]
+    PersonaConfig["Configurable Persona<br/>(Patience, Sensitivity, Tech Literacy, Style)"] --> StateSynth["Cognitive State Synthesizer"]
+    
+    AffectiveEngine --> StateSynth
+    DisclosureCheck --> StateSynth
+    
+    StateSynth --> Monologue["Internal Monologue<br/>(Private Candid Thoughts)"]
+    StateSynth --> LLMOrLocal["Generation Engine<br/>(Gemini 2.5 Flash / Local Heuristic)"]
+    LLMOrLocal --> CustomerReply["Customer Message Spoken<br/>(With Persona Linguistic Fingerprint)"]
+    CustomerReply --> TrajectoryLog["Emotional Trajectory & Scorecard"]
 ```
 
-### 2. Install Dependencies
+### 1. 👤 Configurable Persona Studio
+Each customer persona has parameterized psychological traits and distinct linguistic fingerprints:
+- **Patience (1 - 10)**: Rate of frustration acceleration per unresolved turn.
+- **Emotional Sensitivity (1 - 10)**: Multiplier for emotional impact from praise, apologies, or dismissive replies.
+- **Skepticism (1 - 10)**: Resistance to promises and policy assurances without proof.
+- **Tech Literacy (1 - 10)**: Comfort with technical jargon, 2FA, browser debugging, and console errors.
+- **Verbosity & Communication Style**: `concise`, `moderate`, `verbose`, or `rambling`; typing speed quirks, capitalization during anger, and specific conversational pet peeves.
+
+#### Built-in Personas:
+1. **⚡ Evelyn Reed (Impatient Executive)**: Startup founder, high urgency, demands immediate resolution, zero patience for scripts.
+2. **👴 Harold Jenkins (Confused Senior)**: Polite retired teacher, low tech literacy, tells long anecdotes, anxious about security.
+3. **💻 Devon Vance (Sarcastic Techie)**: Senior software engineer, catches technical bugs, despises L1 scripts, uses biting sarcasm.
+4. **🌸 Maria Santos (Anxious First-Timer)**: Extremely polite, worries about being double-charged, soothed by warmth and empathy.
+5. **🔥 Brenda Miller (Escalate-or-Bust / "Karen")**: Volatile, low patience, threatens chargebacks, lawyer action, demands a supervisor immediately.
+6. **⚖️ Carlos Ruiz (Pragmatic Bargainer)**: Transactional procurement specialist, negotiates credits and tracks ticket timelines.
+7. **Custom Persona Builder**: Interactive UI sliders to configure any persona archetype on the fly.
+
+---
+
+### 2. 📋 Scenario & Ground Truth Engine
+Enforces strict conversational consistency:
+- **Customer Goal**: The customer's exact objective (e.g., $149 refund, emergency flight rebooking, webhook 502 outage bridge).
+- **Ground Truth**: Private facts known to the customer (dates, order numbers, photos, error traces).
+- **Progressive Disclosure Rules**: Customer reveals facts only when appropriately asked; if an agent asks for information already supplied, it triggers an immediate **repetition penalty**!
+- **Acceptance Criteria & Unacceptable Offers**: Identifies when a deal is acceptable vs when an offer (e.g. store credit only or 14-day delay) causes outrage.
+
+#### Built-in Scenarios:
+- **Damaged Luxury Delivery** (E-Commerce)
+- **Surprise Renewal Billing Dispute** (Fintech / SaaS)
+- **Last Flight Canceled - Stranded Passenger** (Aviation / Travel)
+- **Production API 502 Outage** (Developer Tools / B2B)
+- **Stolen Phone & 2FA Lockout** (Cybersecurity & Identity)
+
+---
+
+### 3. 🧠 Affective Dynamics & Emotional Progression
+The simulator tracks a continuous multi-dimensional affective state:
+- **Frustration ($0 - 100\%$)**: Driven by policy shields, repetitive queries, and delay tactics.
+- **Trust ($0 - 100\%$)**: Built by active empathy, transparent communication, and fast resolutions.
+- **Satisfaction ($0 - 100\%$)**: Driven by goal fulfillment and tangible actions.
+- **Arousal / Urgency ($0 - 100\%$)**: Emotional activation level.
+- **Primary Affect**: Dynamically updates between `delighted`, `satisfied`, `relieved`, `hopeful`, `impatient`, `frustrated`, `skeptical`, `infuriated`, and `enraged`.
+- **Ultimatum Warnings & Rage Quit Dynamics**: When frustration remains $\ge 92\%$ across consecutive turns without resolution, the customer gives a final warning and then walks away.
+- **Internal Monologue**: Generates what the customer is candidly thinking in their head vs what they say aloud!
+
+---
+
+### 4. ⚡ Dual-Engine Generation (Local Heuristic + LLM)
+- **Local Heuristic Engine (Offline / Zero-Config)**: High-fidelity natural language synthesis engine that works immediately out of the box without requiring any API keys.
+- **Google Gemini Engine**: Direct integration with Gemini 2.5 Flash via `@google/genai` or REST API with structured JSON output schema enforcement.
+- **OpenAI-Compatible Engine**: Works with OpenAI, Ollama, Groq, or local vLLM instances.
+
+---
+
+### 5. 📊 Objective Evaluation & CSAT Scorecard
+At the conclusion of a session, CSA calculates:
+- **Predicted CSAT Score (1.0 to 5.0 stars)**
+- **First Contact Resolution (FCR)**: Yes / No
+- **Empathy Index**: Percentage of turns exhibiting validating language
+- **De-escalation Shift**: Frustration delta from peak to final turn
+- **Inflection Points**: Turns where the agent made a breakthrough or triggered an escalation
+- **Actionable Coaching Feedback**: Strengths and targeted coaching advice
+
+---
+
+## 🚀 Quick Start
+
+### 1. Installation
+Requires Node.js 18+ (tested on Node 24).
+
 ```bash
-pip install -r requirements.txt
+# Clone or navigate to the repository
+cd project
+
+# Install dependencies
+npm install
+```
+
+### 2. Launch the Web Studio
+Start the server and open your browser at [http://localhost:3000](http://localhost:3000):
+
+```bash
+npm start
+```
+
+### 3. Run the Interactive Terminal CLI
+Test customer simulation directly from your terminal:
+
+```bash
+npm run cli
+```
+
+### 4. Run the Automated Benchmark
+Run automated batch experiments testing different agent strategies against customer personas:
+
+```bash
+npm run benchmark
+```
+
+### 5. Run the Test Suite
+```bash
+npm test
 ```
 
 ---
 
-## How to Run the Application
+## 💻 REST API Reference
 
-Start the Streamlit application on port 8502:
+### `GET /api/personas`
+Returns available customer personas and their baseline traits.
 
-```bash
-streamlit run frontend/app.py --server.port 8502
+### `GET /api/scenarios`
+Returns available support scenarios, goals, and ground truth data.
+
+### `POST /api/simulator/init`
+Initializes a new customer session.
+```json
+{
+  "persona": "impatient_executive",
+  "scenario": "damaged_delivery",
+  "provider": "local"
+}
 ```
 
-Navigate to **http://localhost:8502** in your browser.
+### `POST /api/simulator/turn`
+Executes one turn in response to an agent message.
+```json
+{
+  "sessionId": "csa_example",
+  "agentMessage": "I am so sorry to hear that! I have processed a full refund to your card."
+}
+```
+**Response:**
+```json
+{
+  "success": true,
+  "turnIndex": 1,
+  "customerMessage": "Thank you. That is the outcome I expected. Appreciate you getting it processed.",
+  "internalMonologue": "Okay, this person is actually taking care of it instead of reading from a script. What a relief.",
+  "emotionalState": {
+    "frustration": 15,
+    "satisfaction": 85,
+    "trust": 75,
+    "arousal": 30,
+    "primary": "delighted",
+    "status": "resolved"
+  },
+  "trajectory": [...]
+}
+```
+
+### `POST /api/simulator/evaluate`
+Generates the end-of-session evaluation scorecard.
+
+### `POST /api/simulator/batch`
+Runs an automated batch of agent responses against a customer persona and scenario.
 
 ---
 
-## Running Automated Tests
+## 🔑 Environment Configuration (Optional)
 
-Run pytest across all unit tests and milestone verification suites:
+Copy `.env.example` to `.env` to configure LLM keys:
 
 ```bash
-# Run Milestone 1 tests (includes deduplication, RAG retrieval, migration, and Hit@3 >= 80%)
-python -m pytest tests/test_m1.py -v
+# Server port
+PORT=3000
 
-# Run orchestrator contract tests
-python -m pytest tests/test_orchestrator.py -v
+# Optional: Google Gemini API key
+GEMINI_API_KEY=your_gemini_api_key_here
 
-# Run end-to-end smoke test
-python smoke_test.py
+# Optional: OpenAI API key
+OPENAI_API_KEY=your_openai_api_key_here
 ```
+
+*(You can also configure API keys directly inside the Web Studio UI settings dialog without editing `.env` files).*
+
+---
+
+## 📁 Project Structure
+
+```
+project/
+├── public/                       # Responsive Web Dialogue Studio
+│   ├── index.html                # 3-Pane UI Layout
+│   ├── style.css                 # Dark theme, gauges & animations
+│   └── app.js                    # Dynamic SVG chart, state handling
+├── src/
+│   ├── data/
+│   │   ├── personas.js           # 6 Configurable customer personas
+│   │   └── scenarios.js          # 5 Rich support scenarios
+│   ├── engines/
+│   │   ├── emotionalEngine.js    # Affective state transitions & triggers
+│   │   ├── scenarioEngine.js     # Progressive disclosure & goal checks
+│   │   ├── heuristicEngine.js    # Local offline generator & monologues
+│   │   ├── llmEngine.js          # Gemini 2.5 Flash / OpenAI generator
+│   │   └── evaluationEngine.js   # CSAT & coaching scorecard
+│   ├── simulator.js              # CustomerSimulatorAgent orchestrator
+│   ├── server.js                 # Express REST API & static server
+│   ├── cli.js                    # Interactive terminal simulation
+│   └── batchRunner.js            # Automated policy benchmark runner
+├── test/
+│   ├── unit.test.js              # Unit tests for emotional dynamics
+│   └── integration.test.js       # REST API integration tests
+├── package.json
+└── README.md
+```
+
+---
+
+## 📄 License
+MIT License. Built with ❤️ for realistic affective agent evaluation.
+
