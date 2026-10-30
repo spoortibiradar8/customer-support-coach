@@ -18,6 +18,7 @@ SESSIONS_DIR = DATA_DIR / "sessions"
 KB_INDEX_PATH = DATA_DIR / "kb_index.json"
 SAMPLE_PDFS_DIR = DATA_DIR / "sample_pdfs"
 EVAL_PATH = DATA_DIR / "evaluation" / "retrieval_eval.json"
+AGENT_EVAL_PATH = DATA_DIR / "evaluation" / "agent_eval_dataset.json"
 REPLAY_SAMPLE_PATH = DATA_DIR / "samples" / "replay_demo.txt"
 TEST_TEMP_DIR = DATA_DIR / "test_temp"
 

@@ -2,6 +2,14 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from backend.orchestrator.knowledge_schemas import (
+    ConversationHistoryItem,
+    KnowledgeExecutionStatus,
+    KnowledgeRecommendationRequest,
+    KnowledgeRecommendationResponse,
+    RetrievedPassage,
+)
+
 
 class WorkflowRequest(BaseModel):                     #Input required to run a coaching workflow.
 
@@ -22,3 +30,14 @@ class WorkflowResponse(BaseModel):
     status: Literal["completed", "failed"]
     result: dict[str, Any] | None = None
     error: str | None = None
+
+
+__all__ = [
+    "WorkflowRequest",
+    "WorkflowResponse",
+    "ConversationHistoryItem",
+    "KnowledgeExecutionStatus",
+    "KnowledgeRecommendationRequest",
+    "KnowledgeRecommendationResponse",
+    "RetrievedPassage",
+]

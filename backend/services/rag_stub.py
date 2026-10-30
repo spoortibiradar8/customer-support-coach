@@ -187,16 +187,31 @@ def retrieve(query: str, k: int = 3) -> list[dict[str, Any]]:
         include=["documents", "metadatas", "distances"],
     )
 
-    documents = results.get("documents", [[]])[0]
-    metadatas = results.get("metadatas", [[]])[0]
-    distances = results.get("distances", [[]])[0]
+    raw_ids = results.get("ids")
+    ids = raw_ids[0] if raw_ids and len(raw_ids) > 0 else []
+
+    raw_docs = results.get("documents")
+    documents = raw_docs[0] if raw_docs and len(raw_docs) > 0 else []
+
+    raw_metas = results.get("metadatas")
+    metadatas = raw_metas[0] if raw_metas and len(raw_metas) > 0 else []
+
+    raw_dists = results.get("distances")
+    distances = raw_dists[0] if raw_dists and len(raw_dists) > 0 else []
 
     hits = []
-    for doc, meta, dist in zip(documents, metadatas, distances):
+    n = min(len(documents), len(distances))
+    for idx in range(n):
+        doc = documents[idx]
+        dist = distances[idx]
+        meta = metadatas[idx] if idx < len(metadatas) and isinstance(metadatas[idx], dict) else {}
+        chunk_id = ids[idx] if idx < len(ids) and ids[idx] else (meta.get("chunk_id") if meta else None)
+
         score = round(float(1.0 - dist), 4)
-        doc_name = meta.get("doc_name", meta.get("source", "Unknown"))
-        page = meta.get("page", 1)
+        doc_name = meta.get("doc_name", meta.get("source", "Unknown")) if meta else "Unknown"
+        page = meta.get("page", 1) if meta else 1
         hits.append({
+            "chunk_id": chunk_id,
             "text": doc,
             "doc_name": doc_name,
             "source": doc_name,
