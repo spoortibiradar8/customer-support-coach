@@ -1,11 +1,11 @@
 # Knowledge Recommendation Agent — Integration Readiness Guide
 
-**Module:** Knowledge Recommendation Agent  
-**Component:** `backend.services.knowledge_agent.KnowledgeRecommendationAgent`  
-**Contract Schemas:** `backend.orchestrator.knowledge_schemas`  
-**Author:** Member 7 (Milestone 2)  
-**Status:** **READY FOR INTEGRATION**  
-**Verified Regression:** 89 passed, 0 failed  
+**Module:** Knowledge Recommendation Agent
+**Component:** `backend.services.knowledge_agent.KnowledgeRecommendationAgent`
+**Contract Schemas:** `backend.orchestrator.knowledge_schemas`
+**Author:** Knowledge Recommendation Team
+**Status:** **READY FOR INTEGRATION**
+**Verified Regression:** 89 passed, 0 failed
 
 ---
 
@@ -78,7 +78,7 @@ class RetrievedPassage(BaseModel):
 
 ### Option A: For the Orchestrator (`agent.run`)
 
-Member 4's orchestrator invokes the agent with `(session, message)`:
+The orchestrator invokes the agent with `(session, message)`:
 
 ```python
 from backend.core.data_models import Session, AgentResult
@@ -141,19 +141,19 @@ elif response.status == KnowledgeExecutionStatus.ERROR:
 
 ## 6. Guidance for Other Team Members
 
-### For Member 4 (Orchestrator)
+### For Orchestrator Team
 - Use `agent.run(session, message)`.
 - The returned `AgentResult.result` contains the full serialized response dictionary.
 - If `result.status == "no_match"`, the orchestrator can proceed with generic conversational coaching without knowledge passages.
 - If `result.status == "error"`, log the error string in `result.result["error"]` without crashing the workflow.
 
-### For Member 2 (Streamlit UI)
+### For Streamlit Frontend Team
 - In the coaching sidebar or knowledge recommendation card:
   - Display top passage text, source filename, and page number: e.g. `[Returns Policy, Page 1]`.
   - For scores $< 0.40$, optionally render a subtle badge: `Low confidence (topical match)`.
   - If `no_match == True`, display: *"No matching knowledge base documentation found."*
 
-### For Member 6 (QA & Testing)
+### For QA & Testing Team
 - Run unit tests: `python -m pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py`
 - Run live integration tests: `python -m pytest tests/test_live_rag_integration.py`
 - Run full evaluation benchmark: `python -m backend.evaluation.eval_runner`

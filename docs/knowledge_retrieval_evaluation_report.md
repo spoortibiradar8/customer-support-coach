@@ -1,16 +1,16 @@
-# Milestone 2 — Member 7, Task 7: Evaluation Error Analysis & Integration Readiness
+# Knowledge Retrieval Evaluation: Comprehensive Error Analysis & Integration Readiness
 
 > [!IMPORTANT]
-> **Repository Context:** NEW repository ONLY (`spoortibiradar8/customer-support-coach` at `c:\Users\Admin\Desktop\customer-support-coach`).  
-> **Git Status:** Branch `main`, clean working tree, no commits made, zero package installations.  
-> **Regression Verification:** **89 passed, 0 failed, 1 warning** across all test suites.  
+> **Repository Context:** NEW repository ONLY (`spoortibiradar8/customer-support-coach` at `c:\Users\Admin\Desktop\customer-support-coach`).
+> **Git Status:** Branch `main`, clean working tree, no commits made, zero package installations.
+> **Regression Verification:** **89 passed, 0 failed, 1 warning** across all test suites.
 > **Production State:** Similarity threshold $0.20$ preserved; live ChromaDB retrieval and contextual query builder untouched.
 
 ---
 
 ## 1. Executive Summary
 
-A thorough read-only error analysis of the Knowledge Recommendation Agent's Task 6 evaluation results was conducted across the 22-query labeled evaluation benchmark. 
+A thorough read-only error analysis of the Knowledge Recommendation Agent's Task 6 evaluation results was conducted across the 22-query labeled evaluation benchmark.
 
 The evaluation confirmed:
 1. **Flawless retrieval precision on grounded queries (N=14):**
@@ -137,7 +137,7 @@ flowchart TD
 
 ## 4. Recommended Improvements (Without Production Changes)
 
-### 4.1. Within Member 7 Scope (Agent Refinements)
+### 4.1. Within Knowledge Recommendation Agent Scope (Agent Refinements)
 1. **Confidence Tiering in Response Metadata:**
    - Rather than treating all scores $\ge 0.20$ identically, attach a confidence tier:
      - **High Confidence ($\ge 0.50$):** Verifiably direct or paraphrased match.
@@ -149,11 +149,11 @@ flowchart TD
    - Enforce a minimum chunk length of 100 characters in the chunker, eliminating orphan fragments like `40127cfe9c0a26e5_p1_c1` (`"o unlock it after verifying the customer's name and order number."`).
 
 ### 4.2. Team-Level Architecture Decisions (Requires Team Agreement)
-1. **Cross-Encoder / Entailment Verifier (Member 5 & 7):**
+1. **Cross-Encoder / Entailment Verifier (Coaching Agent & Knowledge Recommendation Teams):**
    - Introduce a fast secondary cross-encoder (e.g. `cross-encoder/ms-marco-MiniLM-L-6-v2`) or LLM verification step before returning passages to ensure the passage answers the query.
-2. **Knowledge Base Documentation Expansion (Member 1 / Product):**
+2. **Knowledge Base Documentation Expansion (Knowledge Base Engineering / Product):**
    - Add a 1-page `accepted_payments_and_policies.pdf` defining payment methods and international shipping limitations, converting all 4 unanswerable queries into grounded answerable queries.
-3. **LLM Coaching Prompt Grounding (Member 5):**
+3. **LLM Coaching Prompt Grounding (Coaching Agent):**
    - Instruct the coaching LLM: *"If the retrieved passages do not explicitly contain the answer, advise the trainee to inform the customer that the policy is currently unavailable or requires supervisor escalation."*
 
 ---
@@ -168,15 +168,15 @@ Documentation has been created in:
 
 | Team Role | Key Action | Implementation Details |
 |---|---|---|
-| **Member 4 (Orchestrator)** | Call `agent.run(session, message)` | Returns standard `AgentResult`. `AgentResult.result` contains serialized `KnowledgeRecommendationResponse`. Check `result["status"]` for `"success"`, `"no_match"`, or `"error"`. |
-| **Member 2 (Frontend / UI)** | Render Knowledge Recommendations | Display top passage text, source filename, and page number in sidebar/card. If `no_match == True`, display *"No relevant policy found."* For scores $< 0.40$, render *"Low confidence match"*. |
-| **Member 6 (QA & Testing)** | Execute regression & benchmarks | Unit tests: `pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py` (62 tests, 1s). Live tests: `pytest tests/test_live_rag_integration.py` (7 tests). Benchmark: `python -m backend.evaluation.eval_runner`. |
-| **Member 5 (Coaching Agent)** | Ground LLM generation | Pass retrieved passages into LLM prompt context to ground coaching tips in official store policies. |
+| **Orchestrator Team** | Call `agent.run(session, message)` | Returns standard `AgentResult`. `AgentResult.result` contains serialized `KnowledgeRecommendationResponse`. Check `result["status"]` for `"success"`, `"no_match"`, or `"error"`. |
+| **Streamlit Frontend Team** | Render Knowledge Recommendations | Display top passage text, source filename, and page number in sidebar/card. If `no_match == True`, display *"No relevant policy found."* For scores $< 0.40$, render *"Low confidence match"*. |
+| **QA & Testing Team** | Execute regression & benchmarks | Unit tests: `pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py` (62 tests, 1s). Live tests: `pytest tests/test_live_rag_integration.py` (7 tests). Benchmark: `python -m backend.evaluation.eval_runner`. |
+| **Coaching Agent Team** | Ground LLM generation | Pass retrieved passages into LLM prompt context to ground coaching tips in official store policies. |
 
 ---
 
 ## 6. Prioritized Next Actions
 
-1. **Immediate (Integration):** Provide `docs/knowledge_agent_integration_readiness.md` to Member 4 for wiring the Orchestrator workflow.
-2. **Milestone 2 Wrap-up:** Coordinate with Member 2 to ensure the UI gracefully displays `NO_MATCH` and low-confidence indicators.
+1. **Immediate (Integration):** Provide `docs/knowledge_agent_integration_readiness.md` to Orchestrator for wiring the Orchestrator workflow.
+2. **Milestone 2 Wrap-up:** Coordinate with Streamlit Frontend to ensure the UI gracefully displays `NO_MATCH` and low-confidence indicators.
 3. **Milestone 3 Enhancement:** Implement confidence tiering and investigate cross-encoder re-ranking to close the in-domain unanswerable gap.

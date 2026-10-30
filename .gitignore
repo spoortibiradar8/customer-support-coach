@@ -2,6 +2,7 @@
 __pycache__/
 *.py[cod]
 *.pyo
+*.pyd
 
 # Testing and coverage
 .pytest_cache/
@@ -20,6 +21,14 @@ env/
 .env/
 .env.local
 .env.*.local
+.env.*
+!.env.example
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # IDE settings
 .idea/
@@ -29,6 +38,7 @@ env/
 # Operating system files
 .DS_Store
 Thumbs.db
+ehthumbs.db
 
 # Build and distribution
 build/
@@ -46,24 +56,21 @@ data/kb_index.json
 chroma_db/
 data/rag/
 
-# Runtime-generated test fixtures (created by run_full_audit.py)
+# Runtime-generated test fixtures
 data/test_temp/
 
-# Root-level screenshot artifacts (committed copies live in docs/screenshots/)
+# Root-level screenshot artifacts
 screenshot_*.png
 
-# Backups flagged for removal
+# Diagnostic & log files
+*.log
+gcm-diagnose.log
+
+# Temporary and backup files
+*.tmp
+*.bak
 undo_backup/
+cleanup_backup/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
-
-# Temporary files
-*.tmp
-*.bak
-
-.env.*
-!.env.example
-
-# Local cleanup backups
-cleanup_backup/

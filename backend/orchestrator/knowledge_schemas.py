@@ -1,7 +1,7 @@
 """Knowledge Recommendation Agent input and output schemas.
 
 Provides strict Pydantic v2 data contracts for the Knowledge Recommendation
-Agent (Member 7, Milestone 2), supporting distinct success, no-match, and error
+Agent, supporting distinct success, no-match, and error
 outcomes, input validation, and bidirectional compatibility with the shared
 orchestrator and AgentResult data models.
 """

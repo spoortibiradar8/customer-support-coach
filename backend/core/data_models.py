@@ -4,7 +4,7 @@ Developed by Vikas M
 Infosys Springboard Virtual Internship 7.0
 Project: AI Customer Support Coaching Assistant
 
-NOTE: This file is owned by Member 1 (Data Models).
+NOTE: Core shared data models.
       It is copied here temporarily so the Orchestrator
       module can be developed and tested independently.
       Replace with the real import once the team merges.

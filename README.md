@@ -1,244 +1,267 @@
-# 🤖 Customer Simulator Agent (CSA)
+# 🎧 AI Customer Support Coaching Assistant
 
-> An Affective Dialogue Simulator that generates realistic, scenario-consistent customer messages turn-by-turn with configurable personas and dynamic emotional progression.
+> An enterprise-grade, multi-agent platform designed to train, evaluate, and coach frontline customer support representatives using realistic dialogue simulation, automated quality evaluation, and policy-grounded retrieval.
 
 ---
 
 ## 🌟 Overview
 
-The **Customer Simulator Agent (CSA)** is designed for training customer service teams, evaluating LLM support bots, benchmarking conversational policies, and conducting realistic red-teaming.
+The **AI Customer Support Coaching Assistant** combines generative affective dialogue simulation with policy retrieval-augmented generation (RAG) and structured coaching.
 
-Unlike static prompt templates, CSA features a **continuous affective state machine** where customer emotions (frustration, trust, satisfaction, arousal) evolve dynamically based on the support agent's actions, conversational empathy, procedural friction, and patience decay.
+The platform provides two complementary interfaces:
+1. **Support Coach Dashboard (Python / Streamlit)**: Interactive workspace for trainees and supervisors, featuring session management, interactive architecture flows, live document ingestion, and policy knowledge retrieval.
+2. **Customer Simulator Agent (Node.js / Express)**: Affective customer dialogue engine featuring continuous emotional progression (frustration, trust, satisfaction, arousal), realistic personas, scenario constraints, and turn-by-turn dialogue generation.
 
 ---
 
-## 🏗️ Core Architectural Pillars
+## 🏗️ Architecture & Component Topology
 
 ```mermaid
 flowchart TD
-    AgentMsg["Support Agent Message"] --> TriggerDetect["Behavioral Trigger Detector<br/>(Empathy, Policy Shield, Repetition, Resolution)"]
-    TriggerDetect --> AffectiveEngine["Affective State Machine<br/>(Frustration, Trust, Satisfaction, Arousal)"]
-    ScenarioGroundTruth["Scenario Ground Truth<br/>(Order #, Private Facts, Goals)"] --> DisclosureCheck["Progressive Disclosure Evaluator"]
-    PersonaConfig["Configurable Persona<br/>(Patience, Sensitivity, Tech Literacy, Style)"] --> StateSynth["Cognitive State Synthesizer"]
-    
-    AffectiveEngine --> StateSynth
-    DisclosureCheck --> StateSynth
-    
-    StateSynth --> Monologue["Internal Monologue<br/>(Private Candid Thoughts)"]
-    StateSynth --> LLMOrLocal["Generation Engine<br/>(Gemini 2.5 Flash / Local Heuristic)"]
-    LLMOrLocal --> CustomerReply["Customer Message Spoken<br/>(With Persona Linguistic Fingerprint)"]
-    CustomerReply --> TrajectoryLog["Emotional Trajectory & Scorecard"]
+    subgraph FrontendLayer["User Experience Layer"]
+        StreamlitUI["Support Coach Dashboard\n(Streamlit / Python)"]
+        SimulatorUI["Customer Simulator Studio\n(Web UI / Express)"]
+    end
+
+    subgraph OrchestrationLayer["Orchestration & Workflow"]
+        Orchestrator["Workflow Orchestrator\n(backend/orchestrator/)"]
+        DataModels["Core Data Models & Schemas\n(Session, AgentResult, Contracts)"]
+    end
+
+    subgraph AgentLayer["Agent & Service Ecosystem"]
+        KnowledgeAgent["Knowledge Recommendation Agent\n(Dense Retrieval + Contextual Synthesis)"]
+        CustomerSim["Customer Simulator Engine\n(Affective State Machine + LLM)"]
+        CoachingAgent["Coaching Evaluation Engine\n(Empathy, Policy, Action Scoring)"]
+    end
+
+    subgraph StorageLayer["Knowledge & Persistence"]
+        ChromaStore[("ChromaDB Vector Store\n(Cosine Similarity / MiniLM)")]
+        SessionStore[("Session JSON Storage\n(data/sessions/)")]
+        EvalDataset[("Evaluation Benchmark\n(data/evaluation/)")]
+    end
+
+    StreamlitUI --> Orchestrator
+    SimulatorUI --> CustomerSim
+    Orchestrator --> KnowledgeAgent
+    Orchestrator --> CustomerSim
+    Orchestrator --> CoachingAgent
+    KnowledgeAgent --> ChromaStore
+    Orchestrator --> SessionStore
+    KnowledgeAgent -.-> EvalDataset
 ```
 
-### 1. 👤 Configurable Persona Studio
-Each customer persona has parameterized psychological traits and distinct linguistic fingerprints:
-- **Patience (1 - 10)**: Rate of frustration acceleration per unresolved turn.
-- **Emotional Sensitivity (1 - 10)**: Multiplier for emotional impact from praise, apologies, or dismissive replies.
-- **Skepticism (1 - 10)**: Resistance to promises and policy assurances without proof.
-- **Tech Literacy (1 - 10)**: Comfort with technical jargon, 2FA, browser debugging, and console errors.
-- **Verbosity & Communication Style**: `concise`, `moderate`, `verbose`, or `rambling`; typing speed quirks, capitalization during anger, and specific conversational pet peeves.
-
-#### Built-in Personas:
-1. **⚡ Evelyn Reed (Impatient Executive)**: Startup founder, high urgency, demands immediate resolution, zero patience for scripts.
-2. **👴 Harold Jenkins (Confused Senior)**: Polite retired teacher, low tech literacy, tells long anecdotes, anxious about security.
-3. **💻 Devon Vance (Sarcastic Techie)**: Senior software engineer, catches technical bugs, despises L1 scripts, uses biting sarcasm.
-4. **🌸 Maria Santos (Anxious First-Timer)**: Extremely polite, worries about being double-charged, soothed by warmth and empathy.
-5. **🔥 Brenda Miller (Escalate-or-Bust / "Karen")**: Volatile, low patience, threatens chargebacks, lawyer action, demands a supervisor immediately.
-6. **⚖️ Carlos Ruiz (Pragmatic Bargainer)**: Transactional procurement specialist, negotiates credits and tracks ticket timelines.
-7. **Custom Persona Builder**: Interactive UI sliders to configure any persona archetype on the fly.
+### Core Components
+- **Workflow Orchestrator (`backend/orchestrator/`)**: Coordinates session state, trainee message processing, agent invocations, and error handling.
+- **Knowledge Recommendation Agent (`backend/agents/`, `backend/services/`)**: Synthesizes customer messages, detected intents, and conversation history to retrieve accurate policy passages from local vector storage.
+- **Support Knowledge Base RAG (`backend/services/rag_stub.py`)**: Vector indexing and dense semantic retrieval engine powered by `all-MiniLM-L6-v2` and ChromaDB.
+- **Retrieval Evaluation Framework (`backend/evaluation/`)**: Automated benchmarking suite calculating Recall@K, Precision@K, MRR, NDCG@K, no-match F1, and latency across labeled evaluation datasets.
+- **Customer Simulator Agent (`src/`, `public/`)**: Node.js/Express service simulating customer behaviors with configurable patience, emotional sensitivity, technical literacy, and progressive information disclosure.
+- **Streamlit Web Application (`frontend/`)**: Modern dashboard for running simulated practice sessions, viewing saved sessions, inspecting architecture diagrams, and testing knowledge retrieval.
 
 ---
 
-### 2. 📋 Scenario & Ground Truth Engine
-Enforces strict conversational consistency:
-- **Customer Goal**: The customer's exact objective (e.g., $149 refund, emergency flight rebooking, webhook 502 outage bridge).
-- **Ground Truth**: Private facts known to the customer (dates, order numbers, photos, error traces).
-- **Progressive Disclosure Rules**: Customer reveals facts only when appropriately asked; if an agent asks for information already supplied, it triggers an immediate **repetition penalty**!
-- **Acceptance Criteria & Unacceptable Offers**: Identifies when a deal is acceptable vs when an offer (e.g. store credit only or 14-day delay) causes outrage.
+## 📂 Directory Structure
 
-#### Built-in Scenarios:
-- **Damaged Luxury Delivery** (E-Commerce)
-- **Surprise Renewal Billing Dispute** (Fintech / SaaS)
-- **Last Flight Canceled - Stranded Passenger** (Aviation / Travel)
-- **Production API 502 Outage** (Developer Tools / B2B)
-- **Stolen Phone & 2FA Lockout** (Cybersecurity & Identity)
+```text
+customer-support-coach/
+├── .streamlit/                     # Streamlit server and theme configuration
+│   └── config.toml
+├── backend/
+│   ├── agents/                     # Agent implementations
+│   │   ├── __init__.py
+│   │   └── knowledge_agent.py      # Knowledge Recommendation Agent
+│   ├── core/                       # Shared data models and type definitions
+│   │   ├── __init__.py
+│   │   └── data_models.py
+│   ├── evaluation/                 # Retrieval evaluation framework
+│   │   ├── __init__.py
+│   │   ├── eval_metrics.py         # Pure IR and classification metric implementations
+│   │   └── eval_runner.py          # Benchmark test harness and reporter
+│   ├── orchestrator/               # Workflow orchestration and schemas
+│   │   ├── __init__.py
+│   │   ├── knowledge_schemas.py    # Pydantic v2 knowledge contracts
+│   │   ├── mock_components.py
+│   │   ├── orchestrator.py
+│   │   └── schemas.py
+│   ├── services/                   # Storage, validation, and retrieval services
+│   │   ├── __init__.py
+│   │   ├── knowledge_agent.py      # Backward-compatible agent re-export
+│   │   ├── pipeline_stub.py
+│   │   ├── rag_stub.py             # ChromaDB vector store and PDF ingestion
+│   │   ├── storage.py              # Session persistence service
+│   │   └── validation.py
+│   ├── config.py                   # Centralized repository path configuration
+│   └── requirements.txt
+├── data/
+│   ├── chroma/                     # Local ChromaDB persistent vector database
+│   ├── evaluation/                 # Labeled evaluation datasets and results
+│   │   ├── agent_eval_dataset.json # Ground-truth customer queries (22 test cases)
+│   │   └── agent_eval_results.json # Empirical evaluation outputs
+│   ├── sample_pdfs/                # Sample support policy documents
+│   │   ├── account_and_password_faq.pdf
+│   │   ├── returns_and_refunds.pdf
+│   │   └── shipping_and_delivery.pdf
+│   └── sessions/                   # Saved coaching session records
+├── docs/                           # Technical documentation and architecture
+│   ├── screenshots/                # Application UI screenshots
+│   ├── architecture.md             # System architecture design
+│   ├── design_decisions.md         # Key engineering design choices
+│   ├── evaluation_error_analysis.md # Evaluation error analysis and root cause study
+│   ├── knowledge_agent_integration_readiness.md # Agent integration guide
+│   ├── knowledge_retrieval_evaluation_report.md  # Comprehensive evaluation report
+│   ├── orchestrator_integration.md # Orchestrator integration guide
+│   └── study_notes.md
+├── frontend/                       # Streamlit web application
+│   ├── styles/                     # CSS themes and custom styling
+│   ├── views/                      # Dashboard views (setup, sessions, architecture)
+│   ├── app.py                      # Streamlit application entry point
+│   └── theme.py
+├── public/                         # Customer Simulator web client (HTML/CSS/JS)
+├── scripts/                        # Utility scripts and visual QA tools
+│   ├── run_demo.py                 # CLI demonstration runner
+│   └── smoke_test.py               # Quick sanity test script
+├── src/                            # Customer Simulator Express.js engine
+│   ├── data/                       # Simulator personas and scenario definitions
+│   ├── engines/                    # Affective, evaluation, and heuristic engines
+│   ├── batchRunner.js              # Simulation benchmark runner
+│   ├── cli.js                      # Simulator CLI interface
+│   ├── server.js                   # Simulator REST API server
+│   └── simulator.js                # CustomerSimulatorAgent class
+├── tests/                          # Automated pytest test suites (89 tests)
+│   ├── test_contextual_query.py    # Query builder and clue synthesis tests
+│   ├── test_evaluation_metrics.py  # Unit tests for retrieval metrics
+│   ├── test_knowledge_contract.py  # Schema validation and serialization tests
+│   ├── test_live_rag_integration.py # Live ChromaDB integration tests
+│   ├── test_m1.py                  # Baseline ingestion and session tests
+│   ├── test_orchestrator.py        # Orchestration workflow tests
+│   └── test_retrieval_metadata.py  # Chunk ID extraction and propagation tests
+├── .env.example                    # Template environment variables
+├── .gitignore                      # Git exclusion rules
+├── package.json                    # Node.js dependencies for Customer Simulator
+├── package-lock.json
+├── pyproject.toml                  # Python package metadata
+├── pytest.ini                      # Pytest runner configuration
+└── requirements.txt                # Unified Python requirements
+```
 
 ---
 
-### 3. 🧠 Affective Dynamics & Emotional Progression
-The simulator tracks a continuous multi-dimensional affective state:
-- **Frustration ($0 - 100\%$)**: Driven by policy shields, repetitive queries, and delay tactics.
-- **Trust ($0 - 100\%$)**: Built by active empathy, transparent communication, and fast resolutions.
-- **Satisfaction ($0 - 100\%$)**: Driven by goal fulfillment and tangible actions.
-- **Arousal / Urgency ($0 - 100\%$)**: Emotional activation level.
-- **Primary Affect**: Dynamically updates between `delighted`, `satisfied`, `relieved`, `hopeful`, `impatient`, `frustrated`, `skeptical`, `infuriated`, and `enraged`.
-- **Ultimatum Warnings & Rage Quit Dynamics**: When frustration remains $\ge 92\%$ across consecutive turns without resolution, the customer gives a final warning and then walks away.
-- **Internal Monologue**: Generates what the customer is candidly thinking in their head vs what they say aloud!
+## 🚀 Getting Started
+
+### Prerequisites
+- **Python**: Version 3.10+ (tested up to Python 3.14)
+- **Node.js**: Version 18+ (optional, for Customer Simulator server)
 
 ---
 
-### 4. ⚡ Dual-Engine Generation (Local Heuristic + LLM)
-- **Local Heuristic Engine (Offline / Zero-Config)**: High-fidelity natural language synthesis engine that works immediately out of the box without requiring any API keys.
-- **Google Gemini Engine**: Direct integration with Gemini 2.5 Flash via `@google/genai` or REST API with structured JSON output schema enforcement.
-- **OpenAI-Compatible Engine**: Works with OpenAI, Ollama, Groq, or local vLLM instances.
+### Python Environment Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/spoortibiradar8/customer-support-coach.git
+   cd customer-support-coach
+   ```
+
+2. **Create and activate a virtual environment:**
+   ```bash
+   python -m venv venv
+   # Windows (PowerShell):
+   .\venv\Scripts\Activate.ps1
+   # macOS/Linux:
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Launch the Streamlit Dashboard:**
+   ```bash
+   streamlit run frontend/app.py
+   ```
+   Open your browser to `http://localhost:8501`.
 
 ---
 
-### 5. 📊 Objective Evaluation & CSAT Scorecard
-At the conclusion of a session, CSA calculates:
-- **Predicted CSAT Score (1.0 to 5.0 stars)**
-- **First Contact Resolution (FCR)**: Yes / No
-- **Empathy Index**: Percentage of turns exhibiting validating language
-- **De-escalation Shift**: Frustration delta from peak to final turn
-- **Inflection Points**: Turns where the agent made a breakthrough or triggered an escalation
-- **Actionable Coaching Feedback**: Strengths and targeted coaching advice
+### Node.js Customer Simulator Setup (Optional)
+
+1. **Install Node dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Start the Simulator Server:**
+   ```bash
+   npm start
+   ```
+   The simulator API and web studio will be accessible at `http://localhost:3000`.
+
+3. **Run Simulator CLI or Benchmark:**
+   ```bash
+   npm run cli
+   npm run benchmark
+   ```
 
 ---
 
-## 🚀 Quick Start
+## 🧪 Testing and Verification
 
-### 1. Installation
-Requires Node.js 18+ (tested on Node 24).
+The repository includes a comprehensive automated test suite with **89 tests** covering unit logic, Pydantic contracts, contextual queries, metadata propagation, and live RAG retrieval:
 
 ```bash
-# Clone or navigate to the repository
-cd project
+# Run the complete test suite
+python -m pytest -v
 
-# Install dependencies
-npm install
-```
-
-### 2. Launch the Web Studio
-Start the server and open your browser at [http://localhost:3000](http://localhost:3000):
-
-```bash
-npm start
-```
-
-### 3. Run the Interactive Terminal CLI
-Test customer simulation directly from your terminal:
-
-```bash
-npm run cli
-```
-
-### 4. Run the Automated Benchmark
-Run automated batch experiments testing different agent strategies against customer personas:
-
-```bash
-npm run benchmark
-```
-
-### 5. Run the Test Suite
-```bash
-npm test
+# Run specific component test suites
+python -m pytest tests/test_evaluation_metrics.py -v
+python -m pytest tests/test_knowledge_contract.py -v
+python -m pytest tests/test_contextual_query.py -v
+python -m pytest tests/test_retrieval_metadata.py -v
+python -m pytest tests/test_live_rag_integration.py -v
+python -m pytest tests/test_orchestrator.py -v
 ```
 
 ---
 
-## 💻 REST API Reference
+## 📊 Knowledge Retrieval Benchmark & Evaluation
 
-### `GET /api/personas`
-Returns available customer personas and their baseline traits.
+The platform includes an automated retrieval evaluation framework grounded in real customer support policies.
 
-### `GET /api/scenarios`
-Returns available support scenarios, goals, and ground truth data.
-
-### `POST /api/simulator/init`
-Initializes a new customer session.
-```json
-{
-  "persona": "impatient_executive",
-  "scenario": "damaged_delivery",
-  "provider": "local"
-}
-```
-
-### `POST /api/simulator/turn`
-Executes one turn in response to an agent message.
-```json
-{
-  "sessionId": "csa_example",
-  "agentMessage": "I am so sorry to hear that! I have processed a full refund to your card."
-}
-```
-**Response:**
-```json
-{
-  "success": true,
-  "turnIndex": 1,
-  "customerMessage": "Thank you. That is the outcome I expected. Appreciate you getting it processed.",
-  "internalMonologue": "Okay, this person is actually taking care of it instead of reading from a script. What a relief.",
-  "emotionalState": {
-    "frustration": 15,
-    "satisfaction": 85,
-    "trust": 75,
-    "arousal": 30,
-    "primary": "delighted",
-    "status": "resolved"
-  },
-  "trajectory": [...]
-}
-```
-
-### `POST /api/simulator/evaluate`
-Generates the end-of-session evaluation scorecard.
-
-### `POST /api/simulator/batch`
-Runs an automated batch of agent responses against a customer persona and scenario.
-
----
-
-## 🔑 Environment Configuration (Optional)
-
-Copy `.env.example` to `.env` to configure LLM keys:
-
+### Running the Live Benchmark
 ```bash
-# Server port
-PORT=3000
-
-# Optional: Google Gemini API key
-GEMINI_API_KEY=your_gemini_api_key_here
-
-# Optional: OpenAI API key
-OPENAI_API_KEY=your_openai_api_key_here
+python -m backend.evaluation.eval_runner
 ```
 
-*(You can also configure API keys directly inside the Web Studio UI settings dialog without editing `.env` files).*
+### Benchmark Summary (22 Labeled Queries, k=3)
+
+| Metric Category | Metric | Score | Interpretation |
+|---|---|---|---|
+| **Information Retrieval** (Answerable Queries, N=14) | **Recall@3 (Doc-level)** | **100.00%** | All target policy documents retrieved |
+| | **Recall@3 (Chunk-level)** | **100.00%** | All target policy chunks retrieved |
+| | **Precision@3 (Doc-level)** | **33.33%** | 1 relevant document out of top-3 cutoff |
+| | **Mean Reciprocal Rank (MRR)** | **1.0000** | Target document placed at **Rank 1** for 100% of answerable queries |
+| | **NDCG@3** | **1.0000** | Ideal discounted cumulative gain ranking |
+| | **Source Attribution Accuracy** | **100.00%** | Top-1 result correctly attributes ground-truth doc |
+| **No-Match Classification** (Unanswerable Queries, N=8) | **Out-of-Domain Rejection** | **100.00%** | Cleanly rejects unrelated queries (scores $\le 0.07$) |
+| | **No-Match Precision** | **100.00%** | Zero false rejections of answerable queries |
+| | **No-Match Recall** | **50.00%** | Identifies 4/8 unanswerable queries |
+| | **No-Match F1-Score** | **66.67%** | Balanced classification accuracy |
+| **Retrieval Latency** | **Median (p50)** | **39.1 ms** | Fast local CPU semantic retrieval |
+| | **95th Percentile (p95)** | **61.3 ms** | Bounded latency under load |
+
+For a complete analysis of false negatives and bi-encoder boundaries, refer to [`docs/evaluation_error_analysis.md`](docs/evaluation_error_analysis.md).
 
 ---
 
-## 📁 Project Structure
+## 🤝 Integration & Contributing
 
-```
-project/
-├── public/                       # Responsive Web Dialogue Studio
-│   ├── index.html                # 3-Pane UI Layout
-│   ├── style.css                 # Dark theme, gauges & animations
-│   └── app.js                    # Dynamic SVG chart, state handling
-├── src/
-│   ├── data/
-│   │   ├── personas.js           # 6 Configurable customer personas
-│   │   └── scenarios.js          # 5 Rich support scenarios
-│   ├── engines/
-│   │   ├── emotionalEngine.js    # Affective state transitions & triggers
-│   │   ├── scenarioEngine.js     # Progressive disclosure & goal checks
-│   │   ├── heuristicEngine.js    # Local offline generator & monologues
-│   │   ├── llmEngine.js          # Gemini 2.5 Flash / OpenAI generator
-│   │   └── evaluationEngine.js   # CSAT & coaching scorecard
-│   ├── simulator.js              # CustomerSimulatorAgent orchestrator
-│   ├── server.js                 # Express REST API & static server
-│   ├── cli.js                    # Interactive terminal simulation
-│   └── batchRunner.js            # Automated policy benchmark runner
-├── test/
-│   ├── unit.test.js              # Unit tests for emotional dynamics
-│   └── integration.test.js       # REST API integration tests
-├── package.json
-└── README.md
-```
+- **Orchestrator Integration**: Consult [`docs/orchestrator_integration.md`](docs/orchestrator_integration.md) for request/response dataclasses and workflow handlers.
+- **Knowledge Agent Contract**: Consult [`docs/knowledge_agent_integration_readiness.md`](docs/knowledge_agent_integration_readiness.md) for typed Pydantic v2 invocation guidelines.
+- **Architecture & Technical Decisions**: Review [`docs/architecture.md`](docs/architecture.md) and [`docs/design_decisions.md`](docs/design_decisions.md).
 
 ---
 
 ## 📄 License
-MIT License. Built with ❤️ for realistic affective agent evaluation.
 
+This project is licensed under the MIT License.

@@ -1,16 +1,16 @@
-# Milestone 2 — Member 7: Evaluation Error Analysis & Root Cause Study
+# Knowledge Retrieval Evaluation: Error Analysis & Root Cause Study
 
-**Module:** Knowledge Recommendation Agent (`backend.services.knowledge_agent`)  
-**Evaluation Dataset:** `data/evaluation/agent_eval_dataset.json` (22 labeled queries)  
-**Evaluation Results:** `data/evaluation/agent_eval_results.json`  
-**Evaluation Metric Suite:** `backend.evaluation.eval_metrics`  
-**Evaluator Runner:** `backend.evaluation.eval_runner`  
+**Module:** Knowledge Recommendation Agent (`backend.services.knowledge_agent`)
+**Evaluation Dataset:** `data/evaluation/agent_eval_dataset.json` (22 labeled queries)
+**Evaluation Results:** `data/evaluation/agent_eval_results.json`
+**Evaluation Metric Suite:** `backend.evaluation.eval_metrics`
+**Evaluator Runner:** `backend.evaluation.eval_runner`
 
 ---
 
 ## 1. Executive Summary
 
-In Milestone 2 Task 6, a comprehensive evaluation framework was designed and executed against the live local ChromaDB knowledge base (`data/chroma/`) using `SentenceTransformer('all-MiniLM-L6-v2')`. 
+In the Knowledge Retrieval Benchmark, a comprehensive evaluation framework was designed and executed against the live local ChromaDB knowledge base (`data/chroma/`) using `SentenceTransformer('all-MiniLM-L6-v2')`.
 
 The empirical evaluation of 22 realistic customer support queries yielded:
 - **Information Retrieval (Answerable Queries, N=14):**
@@ -116,9 +116,9 @@ The four false negative queries represent cases where the customer query is **in
 
 ### Why Did the True Positives Succeed While False Negatives Failed?
 
-1. **Semantic Vector Distance:**  
+1. **Semantic Vector Distance:**
    Out-of-domain queries have zero lexical or semantic connection to customer support or e-commerce. Their embeddings are nearly orthogonal to the document embeddings, producing cosine similarity scores strictly below $0.10$. The threshold of $0.20$ cleanly and decisively eliminates them.
-2. **The Bi-Encoder Entailment Boundary:**  
+2. **The Bi-Encoder Entailment Boundary:**
    Dense bi-encoders (`SentenceTransformer`) project entire sentences into a shared metric space. They are optimized for **topical relevance** (i.e., "is this text about shipping?"), NOT **factual entailment** (i.e., "does this text state whether international shipping is available?").
    When a customer asks an unsupported shipping question, the text is genuinely about shipping, so the bi-encoder assigns a score $> 0.25$. Without an entailment model or cross-encoder, a bi-encoder cannot know that the specific answer is missing.
 
@@ -126,23 +126,23 @@ The four false negative queries represent cases where the customer query is **in
 
 ## 4. Metric Verification and Integrity Audit
 
-1. **Zero Inflation via Deduplication:**  
+1. **Zero Inflation via Deduplication:**
    `compute_recall_at_k` and `compute_precision_at_k` deduplicate retrieved results. If a document or chunk appears multiple times in the top $K$, it is counted exactly once.
-2. **Standard IR Cutoff:**  
+2. **Standard IR Cutoff:**
    `compute_precision_at_k` divides strictly by $K=3$. For single-document targets, maximum precision is $1/3 \approx 0.3333$.
-3. **No-Match Precision and Recall:**  
+3. **No-Match Precision and Recall:**
    - Treating **unanswerable** as the positive class ($y=1$):
      - $\text{Precision} = \frac{\text{TP}}{\text{TP} + \text{FP}} = \frac{4}{4 + 0} = 100\%$ (When agent predicts `NO_MATCH`, it is always correct).
      - $\text{Recall} = \frac{\text{TP}}{\text{TP} + \text{FN}} = \frac{4}{4 + 4} = 50\%$ (Agent catches 4 of the 8 unanswerable queries).
      - $\text{F1} = 2 \cdot \frac{1.0 \cdot 0.5}{1.0 + 0.5} = 66.67\%$.
-4. **Separation of Errors from No-Match:**  
+4. **Separation of Errors from No-Match:**
    `compute_no_match_metrics` only counts `status == "no_match"` as $\hat{y}=1$. An execution error (`status == "error"`) is tracked as an operational failure and is not conflated with a semantic `NO_MATCH`.
 
 ---
 
 ## 5. Recommended Improvements (Without Production Changes)
 
-### Category A: Within Member 7's Responsibility (Evaluation & Agent Refinement)
+### Category A: Within Knowledge Recommendation Agent Scope (Evaluation & Agent Refinement)
 1. **Dynamic Confidence Tiers:** Rather than a binary $\ge 0.20$ acceptance, introduce confidence tiers:
    - **High Confidence ($\ge 0.50$):** Passages directly address the query (observed in all 14 answerable queries).
    - **Low Confidence ($0.20 - 0.40$):** Passages are topically adjacent but may lack exact supporting evidence. Flag as `tentative` or `low_confidence` in metadata.
@@ -150,11 +150,11 @@ The four false negative queries represent cases where the customer query is **in
 3. **Chunk Boundary Cleanup:** Re-chunking PDFs with a minimum chunk size threshold (e.g. discarding chunks $< 100$ characters) would eliminate orphan fragments like `40127cfe9c0a26e5_p1_c1` that produce spurious matches.
 
 ### Category B: Team-Level Architectural Options (Requires Team Agreement)
-1. **Cross-Encoder / NLI Re-Ranking (Member 5 & 7):**
+1. **Cross-Encoder / NLI Re-Ranking (Coaching Agent & Knowledge Recommendation Teams):**
    Add a lightweight cross-encoder or NLI model (e.g. `cross-encoder/ms-marco-MiniLM-L-6-v2`) to verify that the retrieved passage actually entails the customer's question before returning `SUCCESS`.
-2. **Knowledge Base Expansion (Member 1 / Product):**
+2. **Knowledge Base Expansion (Knowledge Base Engineering / Product):**
    Add a standard `company_policies_and_payments.pdf` to cover accepted payment methods, international shipping restrictions, and retail stores, converting unanswerable queries into fully answerable ones.
-3. **Coaching Assistant Prompt Grounding (Member 5 / LLM Agent):**
+3. **Coaching Assistant Prompt Grounding (Coaching Agent / LLM Agent):**
    Ensure the LLM agent prompt instructs: *"If the retrieved knowledge passages do not explicitly mention international shipping or cryptocurrency, inform the customer that the policy is currently unavailable or requires escalation."*
 
 ---
@@ -163,7 +163,7 @@ The four false negative queries represent cases where the customer query is **in
 
 | Priority | Action | Owner | Impact |
 |---|---|---|---|
-| **P1** | Provide integration readiness documentation to Member 4 (Orchestrator) and Member 2 (Frontend) | Member 7 | Enables end-to-end integration |
-| **P2** | Recommend UI handling for scores between $0.20$ and $0.40$ (displaying "Low relevance" indicator) | Member 2 & 7 | Transparently communicates uncertainty to the agent coach |
-| **P3** | Clean up chunking logic in ingestion pipeline to prevent tiny fragment chunks ($< 100$ chars) | Member 1 & 7 | Prevents spurious single-phrase matches like `eval_20` |
+| **P1** | Provide integration readiness documentation to Orchestrator Team and Streamlit Frontend Team | Knowledge Recommendation Agent | Enables end-to-end integration |
+| **P2** | Recommend UI handling for scores between $0.20$ and $0.40$ (displaying "Low relevance" indicator) | Streamlit Frontend & 7 | Transparently communicates uncertainty to the agent coach |
+| **P3** | Clean up chunking logic in ingestion pipeline to prevent tiny fragment chunks ($< 100$ chars) | Core Data Models Team & 7 | Prevents spurious single-phrase matches like `eval_20` |
 | **P4** | Evaluate Cross-Encoder re-ranking in Milestone 3 | Team | Solves topical vs entailment mismatch |

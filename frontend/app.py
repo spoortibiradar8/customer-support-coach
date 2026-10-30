@@ -1,4 +1,4 @@
-"""AI Customer Support Coaching Assistant - Milestone 1 Entry Point."""
+"""AI Customer Support Coaching Assistant."""
 
 from __future__ import annotations
 
