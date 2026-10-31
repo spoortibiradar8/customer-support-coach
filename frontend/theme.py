@@ -34,6 +34,16 @@ PAGE_THEMES = {
         "brand_color": "#0E7A6D",
         "badge_color": "#0E7A6D",
     },
+    "Milestone 2": {
+        "accent": "#4B4D58",
+        "tint": "#EEF2F7",
+        "hover_tint": "#F7F9FC",
+        "tab_active_bg": "#EEF2F7",
+        "select_bg": "#F8FAFD",
+        "border": "#E3E8F0",
+        "brand_color": "#4B4D58",
+        "badge_color": "#3D4254",
+    },
 }
 
 
@@ -228,6 +238,300 @@ def apply_theme(page_title: str = "Dashboard") -> None:
         justify-content: space-between;
         margin-bottom: 12px;
         height: 36px;
+    }}
+    .m2-flow-shell {{
+        margin: 0.5rem 0 1.25rem;
+        padding: 0.25rem 0;
+    }}
+    .m2-phone-card {{
+        max-width: 980px;
+        margin: 0 auto;
+        border-radius: 26px;
+        background: rgba(247, 247, 245, 0.95);
+        border: 1px solid #E5E1E8;
+        padding: 0.65rem 0.9rem 1rem;
+        box-shadow: 0 10px 30px rgba(25, 20, 30, 0.06);
+    }}
+    .m2-statusbar {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1E1B2F;
+        padding: 0.1rem 0.1rem 0.4rem;
+    }}
+    .m2-icons {{
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        font-size: 0.9rem;
+        opacity: 0.8;
+    }}
+    .m2-header-row {{
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        margin: 0.8rem 0 0.75rem;
+        padding-left: 0.15rem;
+    }}
+    .m2-close {{
+        font-size: 2.2rem;
+        line-height: 1;
+        color: #1E1B2F;
+        font-weight: 300;
+    }}
+    .m2-title {{
+        font-size: clamp(1.1rem, 2vw, 2rem);
+        font-weight: 500;
+        color: #1E1B2F;
+        letter-spacing: -0.03em;
+    }}
+    .m2-call-panel {{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(135deg, #4B4D58 0%, #2F3340 100%);
+        border-radius: 18px;
+        padding: 0.7rem 0.8rem;
+        min-height: 92px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+    }}
+    .m2-call-left {{
+        flex: 0 0 auto;
+        width: 56px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+    .m2-icon-box {{
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(255,255,255,0.25);
+        color: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.05);
+        font-size: 1.3rem;
+    }}
+    .m2-call-center {{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: 0;
+    }}
+    .m2-bubble-header {{
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+    }}
+    .m2-avatar {{
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #FFFFFF;
+        font-size: 1.05rem;
+    }}
+    .m2-avatar-rose {{ background: linear-gradient(135deg, #d1447c, #b62f6a); }}
+    .m2-avatar-blue {{ background: linear-gradient(135deg, #3d80d5, #2d5bc7); }}
+    .m2-call-labels {{
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.6rem;
+        color: #F4F5F7;
+        font-size: 0.95rem;
+        overflow: hidden;
+    }}
+    .m2-label-left {{ opacity: 0.95; }}
+    .m2-label-right {{ opacity: 0.92; }}
+    .m2-badge {{
+        min-width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.9);
+        color: #2A2F3A;
+        font-weight: 700;
+        font-size: 0.8rem;
+    }}
+    .m2-call-note {{
+        margin: 0.6rem 0 1rem;
+        text-align: left;
+        font-size: 0.9rem;
+        color: #5C5867;
+        padding-left: 0.3rem;
+    }}
+    .m2-message-block {{
+        display: flex;
+        align-items: flex-start;
+        gap: 0.8rem;
+        margin-bottom: 1rem;
+    }}
+    .m2-avatar-bubble {{
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d8467e, #af2d65);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 1rem;
+        flex-shrink: 0;
+        margin-top: 0.2rem;
+    }}
+    .m2-bubble-text {{
+        flex: 1;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(120,110,130,0.18);
+        border-radius: 18px;
+        padding: 0.9rem 1rem;
+        font-size: clamp(1rem, 1.8vw, 1.35rem);
+        line-height: 1.4;
+        color: #23202F;
+        box-shadow: 0 2px 10px rgba(40, 30, 48, 0.03);
+    }}
+    .m2-step-list {{
+        display: flex;
+        flex-direction: column;
+        gap: 0.42rem;
+    }}
+    .m2-message-user {{
+        justify-content: flex-end;
+    }}
+    .m2-message-user .m2-bubble-text {{
+        max-width: 70%;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        padding: 0.2rem 0;
+        font-size: 0.9rem;
+        color: #5F586B;
+    }}
+    .m2-now {{
+        margin-left: 0.5rem;
+        color: #7A7287;
+    }}
+    .m2-message-timestamp {{
+        text-align: center;
+        color: #6A6476;
+        font-size: 0.9rem;
+        margin: 0.2rem 0 0.8rem;
+    }}
+    .m2-input-row {{
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        background: rgba(219, 220, 224, 0.8);
+        border: 1px solid rgba(126, 126, 135, 0.15);
+        border-radius: 18px;
+        padding: 0.7rem 0.85rem;
+        margin-top: 0.35rem;
+    }}
+    .m2-input-box {{
+        flex: 1;
+        font-size: 1.1rem;
+        color: #6C6B73;
+        min-height: 22px;
+        display: flex;
+        align-items: center;
+    }}
+    .m2-send-btn {{
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #32313A;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }}
+    .milestone-shell {{
+        position: relative;
+        margin: 0.5rem 0 1.15rem;
+        padding: 0.8rem 1rem 0.25rem;
+        border-radius: 16px;
+        border: 1px solid #E7E2EA;
+        background: rgba(255,255,255,0.78);
+        box-shadow: 0 6px 24px rgba(40,26,52,0.05);
+        overflow: hidden;
+    }}
+    .milestone-header {{
+        font-size: clamp(1.15rem, 2vw, 2rem) !important;
+        font-weight: 700 !important;
+        line-height: 1.2;
+        color: #1F1B2C !important;
+        margin-bottom: 0.8rem;
+        letter-spacing: -0.02em;
+    }}
+    .milestone-list {{
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+    }}
+    .milestone-row {{
+        display: flex;
+        align-items: flex-start;
+        gap: 0.65rem;
+        width: 100%;
+        min-width: 0;
+        padding: 0.2rem 0;
+    }}
+    .milestone-index {{
+        flex-shrink: 0;
+        font-size: clamp(0.95rem, 1.6vw, 1.25rem);
+        font-weight: 500;
+        color: #2B2433;
+        line-height: 1.6;
+    }}
+    .milestone-copy {{
+        flex: 1;
+        min-width: 0;
+        font-size: clamp(0.95rem, 1.5vw, 1.15rem);
+        line-height: 1.45;
+        font-weight: 400;
+        color: #2B2433;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }}
+    .highlight-row {{
+        position: relative;
+        padding-left: 0.15rem;
+    }}
+    .milestone-arrow {{
+        flex-shrink: 0;
+        width: 2.1rem;
+        height: 2.1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(103, 92, 119, 0.12);
+        color: #2B2433;
+        font-size: 1.5rem;
+        font-weight: 600;
+        line-height: 1;
+        margin-top: 0.12rem;
+    }}
+    .milestone-arrow.left {{
+        margin-right: 0.1rem;
+    }}
+    .milestone-arrow.right {{
+        margin-left: 0.1rem;
     }}
     .app-title {{
         font-size: 24px !important;
@@ -543,6 +847,58 @@ def apply_theme(page_title: str = "Dashboard") -> None:
     [data-testid="column"] {{
         padding-left: 0.35rem !important;
         padding-right: 0.35rem !important;
+    }}
+    @media (max-width: 760px) {{
+        .milestone-shell {{
+            padding: 0.75rem 0.7rem 0.2rem;
+        }}
+        .milestone-row {{
+            gap: 0.45rem;
+        }}
+        .milestone-arrow {{
+            width: 1.7rem;
+            height: 1.7rem;
+            font-size: 1.2rem;
+        }}
+        .m2-phone-card {{
+            padding: 0.55rem 0.7rem 0.8rem;
+        }}
+        .m2-call-panel {{
+            min-height: 86px;
+        }}
+        .m2-input-row {{
+            padding: 0.6rem 0.7rem;
+        }}
+    }}
+    @media (max-width: 560px) {{
+        .milestone-row {{
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }}
+        .milestone-arrow {{
+            display: none;
+        }}
+        .milestone-index {{
+            width: 1.5rem;
+        }}
+        .m2-call-panel {{
+            padding: 0.55rem 0.55rem;
+        }}
+        .m2-header-row {{
+            gap: 0.55rem;
+        }}
+        .m2-close {{
+            font-size: 1.8rem;
+        }}
+        .m2-title {{
+            font-size: 1.2rem;
+        }}
+        .m2-message-block {{
+            gap: 0.55rem;
+        }}
+        .m2-bubble-text {{
+            padding: 0.8rem 0.8rem;
+        }}
     }}
     </style>
     """
