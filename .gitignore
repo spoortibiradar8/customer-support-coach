@@ -74,3 +74,13 @@ cleanup_backup/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.bak
+
+.env.*
+!.env.example
+
+# Local cleanup backups
+cleanup_backup/
