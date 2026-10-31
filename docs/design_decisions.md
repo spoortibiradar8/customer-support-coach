@@ -1,7 +1,7 @@
 # System Design & Architecture Decisions
 
 **Project:** AI Customer Support Coaching Assistant  
-**Milestone:** 1 (Foundation & Retrieval Pipeline)  
+**Scope:** Platform Architecture & System Design Decisions  
 **Author:** AI Engineering & Support Platform Team  
 
 ---
@@ -34,7 +34,7 @@ Support policies contain discrete instructions (e.g. return windows, refund turn
 ## 3. Flat Session Schema & Storage Architecture
 
 ### Context & Decision
-Milestone 1 transitions from nested legacy schemas (`product_context: {"product": ...}`, duplicate `persona` in `metadata`) to a **single, flat source of truth** stored in `data/sessions/<session_id>.json`.
+The platform establishes a **single, flat source of truth** stored in `data/sessions/<session_id>.json` across all coaching interactions.
 
 ### Schema Specification
 ```json
@@ -54,7 +54,7 @@ Milestone 1 transitions from nested legacy schemas (`product_context: {"product"
 
 ### Key Justifications
 - **Zero Ambiguity:** Fields like `persona` and `max_turns` are cleanly isolated to `Simulator` mode (set to `null` in `Manual` and `Replay`).
-- **Tolerant Migration:** A normalization layer in `utils/storage.py` allows existing sessions created under earlier schemas to load without schema breakage.
+- **Tolerant Migration:** A normalization layer in `backend/services/storage.py` allows existing sessions created under earlier schemas to load without schema breakage.
 - **Offline Inspection:** Plain JSON files in `data/sessions/` can be audited, backed up, or downloaded directly from the Streamlit UI.
 
 ---
@@ -62,12 +62,12 @@ Milestone 1 transitions from nested legacy schemas (`product_context: {"product"
 ## 4. Multi-Agent Orchestration Topology
 
 ### Context & Decision
-The central orchestrator coordinates six specialized agents across milestones using a hub-and-spoke pipeline:
-1. **Customer Simulator [M2]:** Generates persona-driven turns.
-2. **Intent & Sentiment Monitor [M2]:** Real-time emotion and frustration tracking.
-3. **Knowledge Recommender [M3]:** Direct vector retrieval against ChromaDB.
-4. **Coaching & Response Recommender [M3]:** Real-time empathy and clarity suggestions.
-5. **Escalation Risk Monitor [M3]:** Churn and SLA threshold tracking.
-6. **Post-Interaction Summary [M4]:** Resolution score and Kirkpatrick evaluation.
+The central orchestrator coordinates six specialized agents using a hub-and-spoke pipeline:
+1. **Customer Simulator Agent:** Generates persona-driven turns.
+2. **Intent & Sentiment Monitor:** Real-time emotion and frustration tracking.
+3. **Knowledge Recommendation Agent:** Direct vector retrieval against ChromaDB.
+4. **Coaching & Response Recommender:** Real-time empathy and clarity suggestions.
+5. **Escalation Risk Monitor:** Churn and SLA threshold tracking.
+6. **Post-Interaction Summary Agent:** Resolution score and Kirkpatrick evaluation.
 
-In Milestone 1, the orchestrator exposes a validated contract (`run_workflow`) that returns `{"status": "ready", "session_id": ..., "mode": ...}` while passing all Pydantic boundary checks.
+The orchestrator exposes a validated contract (`run_workflow`) that passes all Pydantic boundary checks and returns structured `WorkflowResponse` objects.

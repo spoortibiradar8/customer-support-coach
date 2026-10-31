@@ -1,98 +1,90 @@
-# Architecture & System Design — AI Customer Support Coaching Assistant
+# 🏗️ System Architecture & Engineering Design
 
-**Project:** AI Customer Support Coaching Assistant  
-**Milestone:** Milestone 1 (Foundation, Session Setup & Knowledge Base RAG)  
-**Status:** Live & Production Ready  
+> **AI Customer Support Coaching Assistant**  
+> An enterprise-grade, multi-agent platform combining generative customer simulation, local vector retrieval-augmented generation (RAG), and real-time coaching for frontline support professionals.
 
 ---
 
-## 1. System Architecture Overview
+## 1. System Topology & Data Flow
 
-The AI Customer Support Coaching Assistant is designed as an interactive coaching platform for frontline support agents. It combines dynamic conversation simulation, dense vector retrieval over enterprise support documents, and an orchestrated multi-agent feedback pipeline.
+```mermaid
+flowchart TD
+    subgraph UI["🖥️ Presentation Layer"]
+        Client["Frontline Agent / Supervisor\n(Browser Client)"]
+        Frontend["Streamlit Application\n(frontend/app.py & views/)"]
+    end
 
-```
-┌────────────────────────────────────────────────────────────────────────┐
-│                        USER BROWSER (Streamlit UI)                     │
-│                        http://localhost:8502                           │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │ HTTP / WebSocket
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                        STREAMLIT FRONTEND                              │
-│                                                                        │
-│   Dashboard (views/setup.py)        ← KB ingestion, retrieval, setup   │
-│   Sessions (views/sessions.py)      ← Saved sessions table & inspector │
-│   Architecture (views/architecture) ← Architecture, models, notes      │
-└───────────────┬──────────────────────────────────────────┬─────────────┘
-                │                                          │
-                ▼                                          ▼
-┌────────────────────────────────┐       ┌───────────────────────────────┐
-│       SESSION STORAGE          │       │      KNOWLEDGE BASE (RAG)     │
-│  backend/services/storage.py   │       │  backend/services/rag_stub.py │
-│                                │       │                               │
-│  - JSON files (data/sessions/) │       │  - pypdf text extractor       │
-│  - Session data model schema   │       │  - 500-char / 50-overlap      │
-│  - List, load, delete sessions │       │  - all-MiniLM-L6-v2 local emb │
-│  - Restores state on load      │       │  - ChromaDB (data/chroma/)    │
-│                                │       │  - Cosine distance retrieval  │
-└───────────────┬────────────────┘       └───────────────┬───────────────┘
-                │                                        │
-                ▼                                        ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                          ORCHESTRATION LAYER                           │
-│                  backend/orchestrator/orchestrator.py                  │
-│                                                                        │
-│  - run_workflow(): coordinates session state, agents, and RAG          │
-│  - Strict Pydantic contracts (WorkflowRequest / WorkflowResponse)      │
-│  - In Milestone 1: stub returns {"status": "ready", ...}               │
-└───────────────────────────────────┬────────────────────────────────────┘
-                                    │
-                                    ▼
-┌────────────────────────────────────────────────────────────────────────┐
-│                      SPECIALIZED AGENT ECOSYSTEM                       │
-│                                                                        │
-│  1. Customer Simulator Agent             (Milestone 2)                 │
-│  2. Intent & Sentiment Agent             (Milestone 2)                 │
-│  3. Knowledge Recommendation Agent       (Milestone 3)                 │
-│  4. Coaching & Response Agent            (Milestone 3)                 │
-│  5. Escalation Risk Monitor              (Milestone 3)                 │
-│  6. Post-Interaction Summary Agent       (Milestone 4)                 │
-└────────────────────────────────────────────────────────────────────────┘
+    subgraph Core["⚙️ Orchestration & Domain Models"]
+        Orchestrator["Workflow Orchestrator\n(backend/orchestrator/)"]
+        DataModels["Core Data Models & Contracts\n(backend/core/data_models.py)"]
+    end
+
+    subgraph Storage["💾 Persistence & Knowledge"]
+        SessionStore["Session Storage Service\n(backend/services/storage.py)"]
+        RAGStore["Knowledge Base RAG Engine\n(backend/services/rag_stub.py)"]
+        ChromaDB[("ChromaDB Vector Store\n(data/chroma/)")]
+        DiskSessions[("Session Records\n(data/sessions/)")]
+    end
+
+    subgraph Agents["🤖 Multi-Agent Ecosystem"]
+        direction TB
+        subgraph Stage1["Conversation & Sentiment"]
+            A1["Customer Simulator Agent"]
+            A2["Intent & Sentiment Agent"]
+        end
+        subgraph Stage2["Policy & Coaching"]
+            A3["Knowledge Recommendation Agent"]
+            A4["Coaching & Response Agent"]
+        end
+        subgraph Stage3["Risk & Analytics"]
+            A5["Escalation Risk Monitor"]
+            A6["Post-Interaction Summary Agent"]
+        end
+    end
+
+    Client --> Frontend
+    Frontend --> Orchestrator
+    Frontend --> SessionStore
+    Frontend --> RAGStore
+    SessionStore --> DiskSessions
+    RAGStore --> ChromaDB
+
+    Orchestrator --> Agents
+    A3 --> RAGStore
 ```
 
 ---
 
-## 2. Multi-Agent System Roles and Milestone Mapping
+## 2. Specialized Agent Ecosystem
 
-The multi-agent architecture divides coaching and conversational logic into modular, specialized agents governed by the orchestrator:
+The platform decomposes support coaching into specialized, modular agents coordinated by the central orchestrator:
 
-| Agent Name | Primary Responsibility | Input Context | Output Artifact | Milestone |
-|---|---|---|---|:---:|
-| **Customer Simulator Agent** | Generates realistic, turn-based customer messages based on selected persona, product, and scenario ladder. | Product context, scenario description, customer persona, previous dialogue turns | Simulated customer turn | **M2** |
-| **Intent & Sentiment Agent** | Classifies customer intent and scores real-time sentiment, emotional state, and frustration score (0–100%). | Latest customer message, conversation history, product context | Intent category, sentiment tag, frustration score | **M2** |
-| **Knowledge Recommendation Agent** | Performs dense semantic vector search over the enterprise support knowledge base for relevant policy chunks. | Customer turn, conversation intent, product context | Top-3 ranked policy passages with page numbers & scores | **M3** |
-| **Coaching & Response Agent** | Evaluates agent replies for empathy, tone, conciseness, and generates contextual response guidance. | Agent reply or customer turn, recommended policy chunks, past turn scores | Empathy rating, clarity check, suggested next reply | **M3** |
-| **Escalation Risk Monitor** | Tracks customer sentiment trajectories, identifying churn signals, supervisory demands, and SLA risk. | Frustration trend, repeat contact count, churn keywords | Escalation risk percentage (0–100%), warning flags, de-escalation strategy | **M3** |
-| **Post-Interaction Summary Agent** | Synthesizes full session performance into resolution metrics, timeline graphs, and personalized coaching takeaways. | Complete session transcript, turn-by-turn scores, risk telemetry | Overall resolution quality (0–100), key strengths, growth areas | **M4** |
+| Agent | Responsibility | Input Context | Output Artifact | Functional Role |
+|:---|:---|:---|:---|:---|
+| **Customer Simulator Agent** | Generates realistic, turn-based dialogue turns driven by persona traits and conversation ladders. | Product context, scenario description, persona, past turns | Simulated customer turn | Dialogue Simulation |
+| **Intent & Sentiment Agent** | Classifies customer intent, extracts emotion, and scores frustration (0–100%). | Latest message, dialogue history, product context | Intent category, sentiment tag, frustration score | Real-Time Telemetry |
+| **Knowledge Recommendation Agent** | Dense vector search over support documents to retrieve policy citations. | Customer turn, dialogue intent, product context | Top-3 ranked policy passages with source page & score | Policy Grounding |
+| **Coaching & Response Agent** | Evaluates agent replies for empathy, conciseness, and action steps. | Trainee draft, recommended policies, intent | Empathy score, clarity notes, recommended reply | Live Coaching |
+| **Escalation Risk Monitor** | Tracks customer sentiment trajectories, churn indicators, and SLA threats. | Frustration trend, repeat contact count, keywords | Escalation probability (0–100%), warning flags | Risk Mitigation |
+| **Post-Interaction Summary Agent** | Synthesizes full session metrics into resolution quality scores and coaching takeaways. | Complete transcript, turn-by-turn scores, risk telemetry | Overall resolution score (0–100), key strengths & focus areas | Performance Analytics |
 
 ---
 
-## 3. Orchestration & Data Flow
+## 3. Orchestration & Session Lifecycle
 
-In Milestone 1, the orchestration pipeline is initialized with session creation and validation:
+The workflow orchestrator (`backend/orchestrator/orchestrator.py`) standardizes request routing and contract enforcement:
 
 1. **Session Configuration:**
-   - User configures mode (`Simulator`, `Manual`, `Replay`), product context (3–100 chars), and scenario (20–500 chars).
-   - Mode-specific parameters (Persona, turns, or replay script) are selected dynamically.
+   - User configures interaction mode (`Simulator`, `Manual`, `Replay`), product context (3–100 characters), and scenario details (20–500 characters).
+   - Mode-specific parameters (Persona traits or historical replay transcripts) are validated.
 2. **Pre-flight Validation:**
-   - Input fields are validated via `backend/services/validation.py`.
-   - The knowledge base is checked to ensure at least one document chunk is indexed.
-3. **Session Instantiation & Persistence:**
-   - A `Session` dataclass instance is initialized from `backend/core/data_models.py`.
-   - The session is saved to `data/sessions/<session_id>.json` via `backend/services/storage.py`.
-4. **Workflow Execution:**
-   - `orchestrator.run_workflow()` is invoked, returning a ready status stub confirming orchestration binding.
-   - A flash notification confirms session initialization and updates the sidebar session list.
+   - Validates inputs through strict Pydantic and dataclass models (`backend/services/validation.py`).
+   - Verifies the knowledge base vector store contains indexed policy chunks.
+3. **Session Persistence:**
+   - Instantiates a typed `Session` object (`backend/core/data_models.py`).
+   - Persists session state to `data/sessions/<session_id>.json` through `backend/services/storage.py`.
+4. **Execution Pipeline:**
+   - Invokes `orchestrator.run_workflow(request, session_manager, agent)`, enforcing schema validation and graceful error recovery.
 
 ---
 
@@ -100,7 +92,7 @@ In Milestone 1, the orchestration pipeline is initialized with session creation 
 
 The enterprise knowledge retrieval pipeline operates completely offline with local embeddings:
 
-- **Ingestion & Extraction:** Multi-page PDF support documents are parsed using `pypdf`. Files above 20 MB are rejected. Scanned documents without extractable text trigger informative error messages.
+- **Ingestion & Extraction:** Multi-page PDF support documents are parsed using `pypdf`. Files above 20 MB are rejected with informative error messages.
 - **Chunking Pipeline:** Raw text is divided into 500-character windows with a 50-character sliding overlap. Each chunk preserves source metadata (`doc_name` and `page`).
 - **Embedding Pipeline:** Embeddings are generated using the `all-MiniLM-L6-v2` SentenceTransformer model (384-dimensional dense vectors).
 - **Persistent Vector Store:** ChromaDB `PersistentClient` manages vector storage under `data/chroma/`, utilizing HNSW indexing configured for cosine distance.
@@ -111,9 +103,9 @@ The enterprise knowledge retrieval pipeline operates completely offline with loc
 
 ## 5. Shared Data Models
 
-All components communicate through strictly typed domain models defined in `backend/core/data_models.py`:
+All components communicate through strictly typed domain models defined in [`backend/core/data_models.py`](file:///c:/Users/Admin/Desktop/customer-support-coach/backend/core/data_models.py):
 
 - **`Session`**: Captures session ID, interaction mode, product context, scenario, customer persona, status, timestamps, and metadata.
 - **`ConversationMessage`**: Represents an individual conversation turn, linking session ID, speaker (`customer`, `agent`, `system`), content, turn number, and timestamp.
 - **`AgentResult`**: Standardized schema for multi-agent output, containing agent type, result payload, confidence, and timestamps.
-- **Enums**: `InteractionMode`, `SessionStatus`, `Speaker`.
+- **Domain Enums**: `InteractionMode` (`simulator`, `manual`, `replay`), `SessionStatus` (`active`, `completed`, `cancelled`), and `Speaker` (`customer`, `agent`, `system`).

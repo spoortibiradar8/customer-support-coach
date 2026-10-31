@@ -27,7 +27,7 @@ def render_graphviz_diagram() -> None:
         Frontend [label="Streamlit App\\n(app.py & views/)", fillcolor="#FDE7F1", color="#C2347A"];
         Store [label="Session Store\\n(data/sessions/)", fillcolor="#ECE8FB", color="#6D5BD0"];
         RAG [label="Vector Store & RAG\\n(ChromaDB MiniLM)", fillcolor="#DDF5F1", color="#0E9F8E"];
-        Orchestrator [label="Orchestrator\\n(run_workflow)", fillcolor="#FFE9DC", color="#B5541B"];
+        Orchestrator [label="Workflow Orchestrator\\n(run_workflow)", fillcolor="#FFE9DC", color="#B5541B"];
 
         subgraph cluster_agents {
             label = "Specialized Agent Ecosystem";
@@ -36,12 +36,12 @@ def render_graphviz_diagram() -> None:
             fontname = "sans-serif";
             fontsize = 10;
 
-            A1 [label="Customer Simulator [M2]", fillcolor="#FFFFFF", color="#6B6475"];
-            A2 [label="Intent & Sentiment [M2]", fillcolor="#FFFFFF", color="#6B6475"];
-            A3 [label="Knowledge Recommender [M3]", fillcolor="#FFFFFF", color="#6B6475"];
-            A4 [label="Coaching & Response [M3]", fillcolor="#FFFFFF", color="#6B6475"];
-            A5 [label="Escalation Risk Monitor [M3]", fillcolor="#FFFFFF", color="#6B6475"];
-            A6 [label="Post-Interaction Summary [M4]", fillcolor="#FFFFFF", color="#6B6475"];
+            A1 [label="Customer Simulator", fillcolor="#FFFFFF", color="#6B6475"];
+            A2 [label="Intent & Sentiment", fillcolor="#FFFFFF", color="#6B6475"];
+            A3 [label="Knowledge Recommendation", fillcolor="#FFFFFF", color="#6B6475"];
+            A4 [label="Coaching & Response", fillcolor="#FFFFFF", color="#6B6475"];
+            A5 [label="Escalation Risk Monitor", fillcolor="#FFFFFF", color="#6B6475"];
+            A6 [label="Post-Interaction Summary", fillcolor="#FFFFFF", color="#6B6475"];
         }
 
         // Edges
@@ -97,57 +97,57 @@ def render() -> None:
                 )
         with col2:
             with st.container(border=True):
-                st.markdown("**Milestone Roadmap Status**")
+                st.markdown("**Platform Capabilities**")
                 st.markdown(
-                    "- **Milestone 1 (Complete):** Core architecture, setup configuration, RAG vector ingestion, session persistence.\n"
-                    "- **Milestone 2 (Next):** Customer Simulator & Intent/Sentiment analysis pipeline.\n"
-                    "- **Milestone 3:** Live coaching console, escalation risk monitor, knowledge recommendation.\n"
-                    "- **Milestone 4:** Post-interaction summary, Kirkpatrick evaluation, historical analytics."
+                    "- **Core Foundation:** Decoupled architecture, session persistence, vector RAG, and strict schemas.\n"
+                    "- **Dialogue Simulation:** Customer Simulator Agent with affective state engine and persona ladders.\n"
+                    "- **Policy Grounding:** Dense vector retrieval with ChromaDB, confidence thresholds, and clue synthesis.\n"
+                    "- **Quality & Coaching:** Real-time sentiment tracking, empathy scoring, and IR evaluation benchmarks."
                 )
 
     with tab_agents:
-        st.markdown('<div class="card-title">Specialized Agent Responsibilities & Milestone Matrix</div>', unsafe_allow_html=True)
-        st.caption("Six specialized agents coordinated by the central orchestrator across project milestones.")
+        st.markdown('<div class="card-title">Specialized Agent Responsibilities & Topology Matrix</div>', unsafe_allow_html=True)
+        st.caption("Six specialized agents coordinated by the central orchestrator across the platform lifecycle.")
 
         agents_data = [
             {
                 "Agent Name": "Customer Simulator",
-                "Milestone": "M2",
+                "Functional Layer": "Dialogue Simulation",
                 "Primary Responsibility": "Generates dynamic customer messages following persona traits (Calm, Confused, Impatient, Angry) and conversation ladders.",
                 "Input Context": "Product context, scenario, selected persona, conversation turn index",
                 "Output Artifact": "Simulated customer dialogue turn",
             },
             {
                 "Agent Name": "Intent & Sentiment",
-                "Milestone": "M2",
+                "Functional Layer": "Real-Time Telemetry",
                 "Primary Responsibility": "Classifies customer intent, extracts emotional tone, and calculates frustration score (0–100%).",
                 "Input Context": "Latest customer turn, conversation history, product context",
                 "Output Artifact": "Intent label, sentiment classification, frustration percentage",
             },
             {
                 "Agent Name": "Knowledge Recommendation",
-                "Milestone": "M3",
+                "Functional Layer": "Policy Grounding",
                 "Primary Responsibility": "Queries ChromaDB vector collection using cosine similarity to retrieve top-3 relevant policy excerpts.",
                 "Input Context": "Customer query, identified intent, product context",
                 "Output Artifact": "Top-3 policy chunks with document names, page numbers, and similarity scores",
             },
             {
                 "Agent Name": "Coaching & Response",
-                "Milestone": "M3",
+                "Functional Layer": "Live Coaching",
                 "Primary Responsibility": "Evaluates agent reply tone, empathy, conciseness, and generates context-aware response suggestions.",
                 "Input Context": "Draft agent response, retrieved knowledge chunks, customer intent",
                 "Output Artifact": "Empathy score, clarity notes, recommended next turn reply",
             },
             {
                 "Agent Name": "Escalation Risk Monitor",
-                "Milestone": "M3",
+                "Functional Layer": "Risk Mitigation",
                 "Primary Responsibility": "Tracks sentiment trajectory across turns to detect churn threats, repeated complaints, and SLA breaches.",
                 "Input Context": "Turn history, frustration trend, churn keywords, turn count",
                 "Output Artifact": "Escalation risk score (0–100%), warning flags, de-escalation guidance",
             },
             {
                 "Agent Name": "Post-Interaction Summary",
-                "Milestone": "M4",
+                "Functional Layer": "Performance Analytics",
                 "Primary Responsibility": "Compiles conversation metrics into overall resolution quality score, journey graphs, and actionable takeaways.",
                 "Input Context": "Full dialogue transcript, turn sentiment trajectory, tone scores",
                 "Output Artifact": "Resolution score (0–100), key strengths, specific growth areas",
