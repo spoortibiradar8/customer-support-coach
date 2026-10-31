@@ -3,7 +3,7 @@
 **Module:** Knowledge Recommendation Agent
 **Component:** `backend.services.knowledge_agent.KnowledgeRecommendationAgent`
 **Contract Schemas:** `backend.orchestrator.knowledge_schemas`
-**Author:** Knowledge Recommendation Team
+**Component:** Knowledge Recommendation Agent
 **Status:** **READY FOR INTEGRATION**
 **Verified Regression:** 89 passed, 0 failed
 
@@ -139,21 +139,21 @@ elif response.status == KnowledgeExecutionStatus.ERROR:
 
 ---
 
-## 6. Guidance for Other Team Members
+## 6. Cross-Component Integration Guidance
 
-### For Orchestrator Team
+### For Workflow Orchestrator
 - Use `agent.run(session, message)`.
 - The returned `AgentResult.result` contains the full serialized response dictionary.
 - If `result.status == "no_match"`, the orchestrator can proceed with generic conversational coaching without knowledge passages.
 - If `result.status == "error"`, log the error string in `result.result["error"]` without crashing the workflow.
 
-### For Streamlit Frontend Team
+### For Streamlit Frontend
 - In the coaching sidebar or knowledge recommendation card:
   - Display top passage text, source filename, and page number: e.g. `[Returns Policy, Page 1]`.
   - For scores $< 0.40$, optionally render a subtle badge: `Low confidence (topical match)`.
   - If `no_match == True`, display: *"No matching knowledge base documentation found."*
 
-### For QA & Testing Team
+### For QA & Testing
 - Run unit tests: `python -m pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py`
 - Run live integration tests: `python -m pytest tests/test_live_rag_integration.py`
 - Run full evaluation benchmark: `python -m backend.evaluation.eval_runner`

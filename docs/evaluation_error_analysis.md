@@ -164,6 +164,6 @@ The four false negative queries represent cases where the customer query is **in
 | Priority | Action | Owner | Impact |
 |---|---|---|---|
 | **P1** | Provide integration readiness documentation to Orchestrator Team and Streamlit Frontend Team | Knowledge Recommendation Agent | Enables end-to-end integration |
-| **P2** | Recommend UI handling for scores between $0.20$ and $0.40$ (displaying "Low relevance" indicator) | Streamlit Frontend & 7 | Transparently communicates uncertainty to the agent coach |
-| **P3** | Clean up chunking logic in ingestion pipeline to prevent tiny fragment chunks ($< 100$ chars) | Core Data Models Team & 7 | Prevents spurious single-phrase matches like `eval_20` |
-| **P4** | Evaluate Cross-Encoder re-ranking in Milestone 3 | Team | Solves topical vs entailment mismatch |
+| **P2** | Recommend UI handling for scores between $0.20$ and $0.40$ (displaying "Low relevance" indicator) | Streamlit Frontend & Knowledge Recommendation Agent | Transparently communicates uncertainty to the agent coach |
+| **P3** | Clean up chunking logic in ingestion pipeline to prevent tiny fragment chunks ($< 100$ chars) | Knowledge Base Ingestion Pipeline & Knowledge Recommendation Agent | Prevents spurious single-phrase matches like `eval_20` |
+| **P4** | Evaluate Cross-Encoder re-ranking | Knowledge Recommendation Agent & Coaching Agent | Solves topical vs entailment mismatch |

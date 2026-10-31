@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary
 
-A thorough read-only error analysis of the Knowledge Recommendation Agent's Task 6 evaluation results was conducted across the 22-query labeled evaluation benchmark.
+A thorough error analysis of the Knowledge Recommendation Agent's evaluation results was conducted across the 22-query labeled evaluation benchmark.
 
 The evaluation confirmed:
 1. **Flawless retrieval precision on grounded queries (N=14):**
@@ -158,7 +158,7 @@ flowchart TD
 
 ---
 
-## 5. Integration Readiness Guide for Other Team Members
+## 5. Cross-Component Integration Readiness Guide
 
 Documentation has been created in:
 - [`docs/evaluation_error_analysis.md`](file:///c:/Users/Admin/Desktop/customer-support-coach/docs/evaluation_error_analysis.md)
@@ -166,17 +166,17 @@ Documentation has been created in:
 
 ### Integration Checklist:
 
-| Team Role | Key Action | Implementation Details |
+| Component | Key Action | Implementation Details |
 |---|---|---|
-| **Orchestrator Team** | Call `agent.run(session, message)` | Returns standard `AgentResult`. `AgentResult.result` contains serialized `KnowledgeRecommendationResponse`. Check `result["status"]` for `"success"`, `"no_match"`, or `"error"`. |
-| **Streamlit Frontend Team** | Render Knowledge Recommendations | Display top passage text, source filename, and page number in sidebar/card. If `no_match == True`, display *"No relevant policy found."* For scores $< 0.40$, render *"Low confidence match"*. |
-| **QA & Testing Team** | Execute regression & benchmarks | Unit tests: `pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py` (62 tests, 1s). Live tests: `pytest tests/test_live_rag_integration.py` (7 tests). Benchmark: `python -m backend.evaluation.eval_runner`. |
-| **Coaching Agent Team** | Ground LLM generation | Pass retrieved passages into LLM prompt context to ground coaching tips in official store policies. |
+| **Workflow Orchestrator** | Call `agent.run(session, message)` | Returns standard `AgentResult`. `AgentResult.result` contains serialized `KnowledgeRecommendationResponse`. Check `result["status"]` for `"success"`, `"no_match"`, or `"error"`. |
+| **Streamlit Frontend** | Render Knowledge Recommendations | Display top passage text, source filename, and page number in sidebar/card. If `no_match == True`, display *"No relevant policy found."* For scores $< 0.40$, render *"Low confidence match"*. |
+| **QA & Testing Engine** | Execute regression & benchmarks | Unit tests: `pytest tests/test_evaluation_metrics.py tests/test_knowledge_contract.py tests/test_contextual_query.py tests/test_retrieval_metadata.py` (62 tests, 1s). Live tests: `pytest tests/test_live_rag_integration.py` (7 tests). Benchmark: `python -m backend.evaluation.eval_runner`. |
+| **Coaching Agent** | Ground LLM generation | Pass retrieved passages into LLM prompt context to ground coaching tips in official store policies. |
 
 ---
 
 ## 6. Prioritized Next Actions
 
-1. **Immediate (Integration):** Provide `docs/knowledge_agent_integration_readiness.md` to Orchestrator for wiring the Orchestrator workflow.
-2. **Milestone 2 Wrap-up:** Coordinate with Streamlit Frontend to ensure the UI gracefully displays `NO_MATCH` and low-confidence indicators.
-3. **Milestone 3 Enhancement:** Implement confidence tiering and investigate cross-encoder re-ranking to close the in-domain unanswerable gap.
+1. **Immediate (Integration):** Refer to `docs/knowledge_agent_integration_readiness.md` for wiring the Orchestrator workflow.
+2. **Frontend Coordination:** Ensure the Streamlit Frontend gracefully displays `NO_MATCH` and low-confidence indicators.
+3. **Pipeline Enhancement:** Implement confidence tiering and investigate cross-encoder re-ranking to close the in-domain unanswerable gap.

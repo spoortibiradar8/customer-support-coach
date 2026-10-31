@@ -1,8 +1,7 @@
 # Orchestrator Integration Notes
 
-**Module:** Orchestrator
-**Developed by:** Orchestrator
-**Project:** AI Customer Support Coaching Assistant — Infosys Springboard Virtual Internship 7.0
+**Component:** Workflow Orchestrator
+**Project:** AI Customer Support Coaching Assistant
 
 ---
 
@@ -51,7 +50,7 @@ class WorkflowResponse:
 
 ---
 
-## 4. Session Manager interface (Session Manager)
+## 4. Session Manager Interface
 
 The orchestrator calls exactly **one method**:
 
@@ -68,19 +67,19 @@ def get_session(session_id: str) -> Session | None:
 The returned object must be an instance of `customer_support_coach.data_models.Session`.
 
 ### Optional — workflow status updates
-If The session manager supports persisting workflow status, the orchestrator
-can call an additional method. Proposed signature (confirm with Session Manager before using):
+If the session manager supports persisting workflow status, the orchestrator
+can call an additional method. Proposed signature:
 
 ```python
 def update_session_status(session_id: str, status: str) -> None:
     """Store "active", "completed", or "cancelled" for the session."""
 ```
 
-This is **not implemented yet**. Do not add it until the Session Manager confirms the interface.
+This is **not implemented yet** and can be enabled once session status persistence is required.
 
 ---
 
-## 5. Agent interface (Coaching Agent)
+## 5. Coaching Agent Interface
 
 The orchestrator calls exactly **one method**:
 
@@ -98,7 +97,7 @@ Its `.result` field must be a non-empty dict.
 
 ---
 
-## 6. Shared data models (Core Data Models Team)
+## 6. Shared Data Models
 
 All three modules use the models from `src/customer_support_coach/data_models.py`:
 
@@ -109,8 +108,7 @@ All three modules use the models from `src/customer_support_coach/data_models.py
 | `ConversationMessage` | Agent (optional, for conversation history) |
 | `ValidationError` | All modules |
 
-The copy in this branch (`src/customer_support_coach/`) is **temporary**.
-Replace it with the core data models when branches are merged.
+The shared data models are defined in `backend.core.data_models`.
 
 ---
 
@@ -141,22 +139,21 @@ Failures handled:
 
 ---
 
-## 8. Temporary components (Temporary Orchestrator Components)
+## 8. Mock Components for Standalone Testing
 
-These files are **temporary** and exist only in the orchestrator branch:
+These components provide test doubles for offline testing:
 
-| File | Replaces |
+| Mock Component | Replaces |
 |---|---|
-| `orchestrator/mock_components.py → MockSessionManager` | the real `SessionManager` |
-| `orchestrator/mock_components.py → MockAgent` | the real Coaching Agent |
-| `src/customer_support_coach/` (copied files) | the core package |
+| `backend.orchestrator.mock_components.MockSessionManager` | Real `SessionManager` (`backend.services.storage`) |
+| `backend.orchestrator.mock_components.MockAgent` | Real Coaching Agent (`backend.agents`) |
 
-The orchestrator (`orchestrator/orchestrator.py`) **does not import** `mock_components.py`.
-Swap the injected dependencies in `run_demo.py` and `tests/test_orchestrator.py` to use real implementations.
+The orchestrator (`backend/orchestrator/orchestrator.py`) does not import `mock_components.py`.
+Dependencies are injected into `run_workflow` or `tests/test_orchestrator.py`.
 
 ---
 
-## 9. For Streamlit Frontend Team
+## 9. Streamlit Frontend Integration Guidance
 
 Call `run_workflow()` from your Streamlit page:
 
@@ -178,7 +175,7 @@ else:
 
 ---
 
-## 10. For QA & Testing Team
+## 10. QA & Testing Guidance
 
 - All orchestrator tests live in `tests/test_orchestrator.py`.
 - Run with: `py -3 -m pytest tests/test_orchestrator.py -v`

@@ -1,13 +1,11 @@
-"""
-Shared Data Models and Validation
-Developed by Vikas M
-Infosys Springboard Virtual Internship 7.0
+"""Shared Data Models and Validation.
+
+Component: Core Data Models
 Project: AI Customer Support Coaching Assistant
 
-NOTE: Core shared data models.
-      It is copied here temporarily so the Orchestrator
-      module can be developed and tested independently.
-      Replace with the real import once the team merges.
+Provides standard data models (Session, AgentResult, InteractionMode,
+ConversationMessage, etc.) shared across the Customer Simulator Agent,
+Knowledge Recommendation Agent, Orchestrator, and Frontend.
 """
 
 import json

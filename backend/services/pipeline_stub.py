@@ -1,6 +1,6 @@
 """Rule-based stand-ins for agents so the UI can run without live agents.
 
-Team integration: replace these functions with real agents while keeping
+Subsystem integration: replace these stub functions with specialized agent components while keeping
 the returned dictionary keys consistent.
 """
 

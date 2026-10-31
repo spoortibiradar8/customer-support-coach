@@ -141,7 +141,7 @@ class KnowledgeRecommendationAgent:
 
     Retrieves relevant policy and support documentation chunks using dense
     vector search over ChromaDB and returns structured recommendations conforming
-    to the Milestone 2 input/output contract.
+    to the Knowledge Recommendation Agent input/output contract.
     """
 
     AGENT_TYPE = "knowledge-recommendation-agent"

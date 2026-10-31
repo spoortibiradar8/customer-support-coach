@@ -28,7 +28,7 @@ The AI Customer Support Coaching Assistant is designed as an interactive coachin
                 ▼                                          ▼
 ┌────────────────────────────────┐       ┌───────────────────────────────┐
 │       SESSION STORAGE          │       │      KNOWLEDGE BASE (RAG)     │
-│       utils/storage.py         │       │      utils/rag_stub.py        │
+│  backend/services/storage.py   │       │  backend/services/rag_stub.py │
 │                                │       │                               │
 │  - JSON files (data/sessions/) │       │  - pypdf text extractor       │
 │  - Session data model schema   │       │  - 500-char / 50-overlap      │
@@ -39,8 +39,8 @@ The AI Customer Support Coaching Assistant is designed as an interactive coachin
                 │                                        │
                 ▼                                        ▼
 ┌────────────────────────────────────────────────────────────────────────┐
-│                     ORCHESTRATION LAYER                                │
-│                     orchestrator/orchestrator.py                       │
+│                          ORCHESTRATION LAYER                           │
+│                  backend/orchestrator/orchestrator.py                  │
 │                                                                        │
 │  - run_workflow(): coordinates session state, agents, and RAG          │
 │  - Strict Pydantic contracts (WorkflowRequest / WorkflowResponse)      │
@@ -85,11 +85,11 @@ In Milestone 1, the orchestration pipeline is initialized with session creation 
    - User configures mode (`Simulator`, `Manual`, `Replay`), product context (3–100 chars), and scenario (20–500 chars).
    - Mode-specific parameters (Persona, turns, or replay script) are selected dynamically.
 2. **Pre-flight Validation:**
-   - Input fields are validated via `utils/validation.py`.
+   - Input fields are validated via `backend/services/validation.py`.
    - The knowledge base is checked to ensure at least one document chunk is indexed.
 3. **Session Instantiation & Persistence:**
-   - A `Session` dataclass instance is initialized from `src/customer_support_coach/data_models.py`.
-   - The session is saved to `data/sessions/<session_id>.json` via `utils/storage.py`.
+   - A `Session` dataclass instance is initialized from `backend/core/data_models.py`.
+   - The session is saved to `data/sessions/<session_id>.json` via `backend/services/storage.py`.
 4. **Workflow Execution:**
    - `orchestrator.run_workflow()` is invoked, returning a ready status stub confirming orchestration binding.
    - A flash notification confirms session initialization and updates the sidebar session list.
@@ -111,7 +111,7 @@ The enterprise knowledge retrieval pipeline operates completely offline with loc
 
 ## 5. Shared Data Models
 
-All components communicate through strictly typed domain models defined in `src/customer_support_coach/data_models.py`:
+All components communicate through strictly typed domain models defined in `backend/core/data_models.py`:
 
 - **`Session`**: Captures session ID, interaction mode, product context, scenario, customer persona, status, timestamps, and metadata.
 - **`ConversationMessage`**: Represents an individual conversation turn, linking session ID, speaker (`customer`, `agent`, `system`), content, turn number, and timestamp.
