@@ -10,7 +10,8 @@ from backend.services import rag_stub
 NEG = [
     "angry", "ridiculous", "unacceptable", "worst", "terrible", "furious",
     "useless", "still", "again", "waiting", "never", "not working",
-    "broken", "cancel", "lawyer", "complaint", "!!",
+    "broken", "cancel", "lawyer", "complaint", "charged", "twice",
+    "problem", "issue", "!!",
 ]
 POS = [
     "thanks", "thank you", "great", "perfect", "appreciate", "resolved",
@@ -73,11 +74,15 @@ def analyze_turn(text, history, cfg):
     pos = sum(word in t for word in POS)
     n_cust = sum(message["role"] == "customer" for message in history)
 
+    urgency = 6 if any(word in t for word in ("today", "asap", "immediately", "urgent")) else 0
+    billing_issue = 8 if any(word in t for word in ("charged", "refund", "billing", "invoice", "payment", "twice")) else 0
     frustration = max(
         0,
         min(
             100,
-            20 + neg * 18 - pos * 20
+            20 + neg * 10 - pos * 20
+            + billing_issue
+            + urgency
             + (10 if t.count("!") >= 2 else 0)
             + n_cust * 4,
         ),
