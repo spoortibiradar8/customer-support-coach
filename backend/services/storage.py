@@ -1,9 +1,3 @@
-"""Session persistence utilities for JSON storage in data/sessions/.
-
-Implements the flat Milestone 1 session schema and a tolerant loader
-for migrating legacy session formats on read.
-"""
-
 from __future__ import annotations
 
 import json
