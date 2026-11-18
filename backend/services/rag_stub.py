@@ -1,9 +1,3 @@
-"""Support Knowledge Base Ingestion and RAG Module.
-
-Uses sentence-transformers ('all-MiniLM-L6-v2') and ChromaDB PersistentClient
-to provide dense semantic retrieval over uploaded support documents.
-"""
-
 from __future__ import annotations
 
 import hashlib
