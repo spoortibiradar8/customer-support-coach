@@ -1,9 +1,3 @@
-"""Knowledge Recommendation Agent implementation.
-
-Re-exports KnowledgeRecommendationAgent from backend.agents.knowledge_agent
-for backward compatibility across existing services and tests.
-"""
-
 from backend.agents.knowledge_agent import (
     DOMAINS,
     MAX_CLUE_CHARS,
