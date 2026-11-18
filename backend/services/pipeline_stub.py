@@ -4,7 +4,10 @@ Subsystem integration: replace these stub functions with specialized agent compo
 the returned dictionary keys consistent.
 """
 
+from backend.agents.coaching_agent import CoachingResponseAgent
 from backend.services import rag_stub
+
+_coaching_agent = CoachingResponseAgent()
 
 
 NEG = [
@@ -57,9 +60,46 @@ LADDERS = {
 }
 
 
+def derive_recommendation_type(chunk: dict) -> str:
+    """Derive recommendation type ('Article' | 'FAQ' | 'Troubleshooting') from chunk heading/content."""
+    doc_name = (chunk.get("doc_name") or chunk.get("source") or "").lower()
+    text = (chunk.get("text") or "").lower()
+
+    if "faq" in doc_name or "?" in text or "how do i" in text or "can i" in text or "what is" in text:
+        return "FAQ"
+
+    troubleshoot_words = ("troubleshoot", "repair", "fix", "damaged", "faulty", "error", "steps", "replace", "issue")
+    if any(k in doc_name for k in ("troubleshoot", "repair")) or any(k in text for k in troubleshoot_words):
+        return "Troubleshooting"
+
+    return "Article"
+
+
 def simulate_customer(cfg, turn):
-    """Return a simulated customer message for the selected persona."""
-    ladder = LADDERS.get(cfg.get("persona", "Calm"), LADDERS["Calm"])
+    """Return a simulated customer message for the selected persona and emotional progression."""
+    progression = (cfg.get("emotional_progression") or "").lower()
+    persona = cfg.get("customer_type") or cfg.get("persona", "Calm")
+
+    if progression == "gets_angrier":
+        if turn == 0:
+            ladder_key = persona if persona in LADDERS else "Calm"
+        elif turn == 1:
+            ladder_key = "Impatient"
+        else:
+            ladder_key = "Angry"
+    elif progression == "calms_down":
+        if turn == 0:
+            ladder_key = "Angry"
+        elif turn == 1:
+            ladder_key = "Impatient"
+        else:
+            ladder_key = "Calm"
+    elif progression == "stays_calm":
+        ladder_key = "Calm"
+    else:
+        ladder_key = persona if persona in LADDERS else "Calm"
+
+    ladder = LADDERS.get(ladder_key, LADDERS["Calm"])
     message_index = min(turn, len(ladder) - 1)
     return ladder[message_index].format(
         p=cfg.get("product", "your product"),
@@ -139,23 +179,21 @@ def analyze_turn(text, history, cfg):
     }
 
 
-def evaluate_agent_reply(text):
-    """Give a simple coaching score and feedback for an agent reply."""
-    words = len(text.split())
-    empathy = any(
-        word in text.lower() for word in ("sorry", "understand", "apolog", "thank")
+def evaluate_agent_reply(
+    text,
+    customer_message=None,
+    history=None,
+    policies=None,
+    product_name=None,
+):
+    """Evaluate an agent reply across 8 coaching dimensions using CoachingResponseAgent."""
+    return _coaching_agent.evaluate_reply(
+        reply_text=text,
+        customer_message=customer_message,
+        history=history,
+        policies=policies,
+        product_name=product_name,
     )
-    shouty = text.isupper() or text.count("!") > 2
-    notes = [
-        "✅ Empathetic tone" if empathy
-        else "⚠️ Add an empathy phrase (e.g. 'I understand...')",
-        "✅ Clear length" if 8 <= words <= 80
-        else "⚠️ Aim for 8–80 words for clarity",
-        "⚠️ Avoid ALL CAPS / excess '!'" if shouty
-        else "✅ Calm formatting",
-    ]
-    score = 40 + 20 * empathy + 20 * (8 <= words <= 80) + 20 * (not shouty)
-    return {"score": score, "notes": notes}
 
 
 SAMPLE_TRANSCRIPT = """Customer: Hi, my refund for order #4521 still hasn't arrived after 10 days.
