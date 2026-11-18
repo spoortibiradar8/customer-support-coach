@@ -1,10 +1,3 @@
-"""FastAPI Application for Customer Support Coaching Assistant.
-
-Wraps the existing Orchestrator, RAG pipeline, and Storage modules
-without modifying agent logic. Exposes a clean, RESTful API with CORS
-enabled for the Next.js frontend (http://localhost:3000).
-"""
-
 from __future__ import annotations
 
 import io
