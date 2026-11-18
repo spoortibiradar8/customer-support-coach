@@ -1,5 +1,3 @@
-"""Three-panel live coaching console for conversation, coaching, and knowledge."""
-
 import streamlit as st
 
 from backend.services import pipeline_stub as pipe
