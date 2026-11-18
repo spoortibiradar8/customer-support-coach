@@ -1,7 +1,4 @@
 """Evaluation Metrics for Knowledge Retrieval.
-
-Defines mathematically rigorous, standard Information Retrieval (IR) metrics
-and binary classification metrics for the Knowledge Recommendation Agent:
   - Recall@K
   - Precision@K
   - Reciprocal Rank (RR) / Mean Reciprocal Rank (MRR)
