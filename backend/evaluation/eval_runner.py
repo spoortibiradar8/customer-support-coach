@@ -1,10 +1,3 @@
-"""Knowledge Retrieval Evaluation Runner.
-
-Executes the labeled evaluation dataset against the Knowledge Recommendation Agent,
-measures retrieval latency, computes IR and classification metrics, and generates
-detailed per-query and aggregate reports.
-"""
-
 from __future__ import annotations
 
 import json
