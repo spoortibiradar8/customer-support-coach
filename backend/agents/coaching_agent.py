@@ -57,8 +57,8 @@ def _eval_empathy(lower_text: str) -> tuple[int, str]:
         "glad", "happy to help", "my pleasure",
     ]
     if any(keyword in lower_text for keyword in empathy_keywords):
-        return 15, "✅ Empathy (15/15): Acknowledged customer feelings and expressed courtesy."
-    return 0, "⚠️ Empathy (0/15): Missing validation or apology. Consider saying 'I understand your frustration' or 'I apologize for the trouble'."
+        return 15, "Empathy (15/15): Acknowledged customer feelings and expressed courtesy."
+    return 0, "Empathy (0/15): Missing validation or apology. Consider saying 'I understand your frustration' or 'I apologize for the trouble'."
 
 
 def _eval_tone(text: str, lower_text: str) -> tuple[int, str]:
@@ -73,23 +73,23 @@ def _eval_tone(text: str, lower_text: str) -> tuple[int, str]:
     is_shouting = (len(words) >= 3 and text.isupper()) or text.count("!") > 2
 
     if found_defensive:
-        return 0, f"⚠️ Tone (0/10): Defensive language detected ('{found_defensive[0]}'). Aim for a supportive tone."
+        return 0, f"Tone (0/10): Defensive language detected ('{found_defensive[0]}'). Aim for a supportive tone."
     if is_shouting:
-        return 3, "⚠️ Tone (3/10): Avoid ALL CAPS and excessive exclamation marks ('!')."
-    return 10, "✅ Tone (10/10): Calm, warm, and respectful phrasing."
+        return 3, "Tone (3/10): Avoid ALL CAPS and excessive exclamation marks ('!')."
+    return 10, "Tone (10/10): Calm, warm, and respectful phrasing."
 
 
 def _eval_clarity(word_count: int) -> tuple[int, str]:
     """Dimension 3: Clarity (15 points)."""
     if 12 <= word_count <= 70:
-        return 15, f"✅ Clarity (15/15): Well-paced, clear length ({word_count} words)."
+        return 15, f" Clarity (15/15): Well-paced, clear length ({word_count} words)."
     if 8 <= word_count < 12:
-        return 10, f"⚠️ Clarity (10/15): Slightly brief ({word_count} words). Ensure the explanation is fully detailed."
+        return 10, f" Clarity (10/15): Slightly brief ({word_count} words). Ensure the explanation is fully detailed."
     if 71 <= word_count <= 95:
-        return 10, f"⚠️ Clarity (10/15): Slightly long ({word_count} words). Aim to keep turns concise."
+        return 10, f" Clarity (10/15): Slightly long ({word_count} words). Aim to keep turns concise."
     if word_count < 8:
-        return 4, f"⚠️ Clarity (4/15): Too brief ({word_count} words) for a helpful support explanation."
-    return 5, f"⚠️ Clarity (5/15): Overly long ({word_count} words). Break long explanations into shorter turns."
+        return 4, f" Clarity (4/15): Too brief ({word_count} words) for a helpful support explanation."
+    return 5, f"Clarity (5/15): Overly long ({word_count} words). Break long explanations into shorter turns."
 
 
 def _eval_relevance(
@@ -132,8 +132,8 @@ def _eval_relevance(
     if cust_domains:
         matched_domains = [d for d in cust_domains if any(k in lower_reply for k in DOMAINS[d])]
         if matched_domains:
-            return 15, f"✅ Relevance (15/15): Directly addresses customer's {matched_domains[0]} issue."
-        return 0, f"⚠️ Relevance (0/15): Customer asked about {cust_domains[0]}, but your reply does not address it."
+            return 15, f"Relevance (15/15): Directly addresses customer's {matched_domains[0]} issue."
+        return 0, f"Relevance (0/15): Customer asked about {cust_domains[0]}, but your reply does not address it."
 
     # Salient non-stopword overlap (excluding generic 'order')
     cust_tokens = set(re.findall(r"\b[a-z]{3,}\b", cust_full_text)) - STOP_WORDS
@@ -141,10 +141,10 @@ def _eval_relevance(
     overlap = cust_tokens & reply_tokens
 
     if len(overlap) >= 2:
-        return 15, "✅ Relevance (15/15): Directly on-topic with the customer's specific inquiry."
+        return 15, "Relevance (15/15): Directly on-topic with the customer's specific inquiry."
     if len(overlap) == 1:
-        return 8, "⚠️ Relevance (8/15): Partially on-topic; make sure to address the core problem directly."
-    return 0, "⚠️ Relevance (0/15): Reply does not seem to address what the customer asked."
+        return 8, "Relevance (8/15): Partially on-topic; make sure to address the core problem directly."
+    return 0, "Relevance (0/15): Reply does not seem to address what the customer asked."
 
 
 def _eval_accuracy(lower_reply: str, policies: list[dict[str, Any]] | None) -> tuple[int, str] | None:
@@ -180,8 +180,8 @@ def _eval_accuracy(lower_reply: str, policies: list[dict[str, Any]] | None) -> t
     if found_guarantees:
         unsupported_g = [g for g in found_guarantees if g not in policy_corpus]
         if unsupported_g:
-            return 0, f"⚠️ Accuracy (0/15): Unverified commitment ('{unsupported_g[0]}') is not supported by policy guidelines."
-        return 15, f"✅ Accuracy (15/15): Specific commitment ('{found_guarantees[0]}') is verified by official policy."
+            return 0, f"Accuracy (0/15): Unverified commitment ('{unsupported_g[0]}') is not supported by policy guidelines."
+        return 15, f"Accuracy (15/15): Specific commitment ('{found_guarantees[0]}') is verified by official policy."
 
     # 3. Check for specific policy rule details (procedural phrases)
     SPECIFIC_POLICY_RULES = [
@@ -191,10 +191,10 @@ def _eval_accuracy(lower_reply: str, policies: list[dict[str, Any]] | None) -> t
     ]
     verified_rules = [rule for rule in SPECIFIC_POLICY_RULES if rule in lower_reply and rule in policy_corpus]
     if verified_rules:
-        return 15, f"✅ Accuracy (15/15): Specific policy rule ('{verified_rules[0]}') verified against retrieved documentation."
+        return 15, f"Accuracy (15/15): Specific policy rule ('{verified_rules[0]}') verified against retrieved documentation."
 
     # 4. General response with no detected unsupported claims, but lacking specific verifiable detail
-    return 10, "ℹ️ Accuracy (10/15): General response with no detected unsupported claims; contains insufficient detail for full verification."
+    return 10, "Accuracy (10/15): General response with no detected unsupported claims; contains insufficient detail for full verification."
 
 
 def _eval_actionability(lower_text: str, text: str) -> tuple[int, str]:
@@ -213,10 +213,10 @@ def _eval_actionability(lower_text: str, text: str) -> tuple[int, str]:
     has_action = any(term in lower_text for term in action_steps) or "?" in text
 
     if has_ownership and has_action:
-        return 15, "✅ Actionability (15/15): Took personal ownership and gave a clear next step or question."
+        return 15, "Actionability (15/15): Took personal ownership and gave a clear next step or question."
     if has_ownership or has_action:
-        return 10, "⚠️ Actionability (10/15): Has ownership or action step, but combine both for best results (e.g. 'I will check this right away. Could you confirm your order ID?')."
-    return 0, "⚠️ Actionability (0/15): Passive response. State clearly what you will do next or ask a guiding question."
+        return 10, " Actionability (10/15): Has ownership or action step, but combine both for best results (e.g. 'I will check this right away. Could you confirm your order ID?')."
+    return 0, "Actionability (0/15): Passive response. State clearly what you will do next or ask a guiding question."
 
 
 def _eval_personalization(
