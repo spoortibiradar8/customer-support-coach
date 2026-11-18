@@ -1,9 +1,3 @@
-"""Rule-based stand-ins for agents so the UI can run without live agents.
-
-Subsystem integration: replace these stub functions with specialized agent components while keeping
-the returned dictionary keys consistent.
-"""
-
 from backend.agents.coaching_agent import CoachingResponseAgent
 from backend.services import rag_stub
 
