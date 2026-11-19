@@ -1,4 +1,4 @@
-# 🎧 AI Customer Support Coaching Assistant
+# AI Customer Support Coaching Assistant
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Tests Passing](https://img.shields.io/badge/pytest-89%2F89%20passing-success.svg?style=flat-square&logo=pytest&logoColor=white)](tests/)
@@ -10,7 +10,7 @@
 
 ---
 
-## 🌟 Overview
+## Overview
 
 The **AI Customer Support Coaching Assistant** integrates generative customer simulation with policy retrieval-augmented generation (RAG) and automated coaching:
 
@@ -19,30 +19,30 @@ The **AI Customer Support Coaching Assistant** integrates generative customer si
 
 ---
 
-## 🏗️ Architecture & Component Topology
+## Architecture & Component Topology
 
 ```mermaid
 flowchart LR
-    subgraph UI["🖥️ Interfaces"]
+    subgraph UI["Interfaces"]
         direction TB
         Streamlit["Support Coach Dashboard\n(Streamlit / Python)"]
         Simulator["Customer Simulator Studio\n(Web UI / Express)"]
     end
 
-    subgraph Core["⚙️ Orchestration & Models"]
+    subgraph Core["Orchestration & Models"]
         direction TB
         Orch["Workflow Orchestrator"]
         Models["Core Data Models & Contracts"]
     end
 
-    subgraph Agents["🤖 Agent Ecosystem"]
+    subgraph Agents["Agent Ecosystem"]
         direction TB
         KA["Knowledge Recommendation Agent"]
         CS["Customer Simulator Engine"]
         CE["Coaching Evaluation Engine"]
     end
 
-    subgraph Storage["💾 Knowledge & Storage"]
+    subgraph Storage["Knowledge & Storage"]
         direction TB
         Chroma[("ChromaDB Vector Store\n(MiniLM Embeddings)")]
         Sessions[("Session Store\n(data/sessions/)")]
@@ -73,7 +73,7 @@ flowchart LR
 
 ---
 
-## 📂 Directory Structure
+## Directory Structure
 
 ```text
 customer-support-coach/
@@ -94,7 +94,7 @@ customer-support-coach/
 
 ---
 
-## 🚀 Quickstart
+## Quickstart
 
 ### Python Backend & Dashboard
 
@@ -131,7 +131,7 @@ npm start
 
 ---
 
-## 🧪 Testing & Verification
+## Testing & Verification
 
 The project includes an automated test suite with **89 tests** verifying contract schemas, contextual query synthesis, metadata propagation, and live RAG retrieval:
 
@@ -148,7 +148,7 @@ python scripts/run_demo.py
 
 ---
 
-## 📊 Knowledge Retrieval Benchmark
+##  Knowledge Retrieval Benchmark
 
 An automated retrieval evaluation framework measures policy grounding against 22 labeled customer support queries ($K=3$):
 
@@ -175,7 +175,7 @@ python -m backend.evaluation.eval_runner
 
 ---
 
-## 📚 Technical Documentation
+## Technical Documentation
 
 - **[System Architecture](docs/architecture.md)**: Multi-agent topology, data flow, and shared data models.
 - **[Design Decisions](docs/design_decisions.md)**: Justifications for local embeddings, chunking strategy, and storage.
@@ -185,6 +185,6 @@ python -m backend.evaluation.eval_runner
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
