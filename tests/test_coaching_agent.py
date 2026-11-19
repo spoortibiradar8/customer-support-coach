@@ -1,20 +1,3 @@
-"""Unit tests for the Coaching & Response Suggestion Agent (Member 4).
-
-Tests:
-1. Empty representative reply handling
-2. Empathetic and actionable reply evaluation
-3. Relevance evaluation using customer history
-4. Relevance ignoring agent and system history
-5. Relevance skipped when no customer context exists
-6. Accuracy skipped when no policy documents are provided
-7. Accuracy gives 15 for supported policy details
-8. Accuracy gives 10 for general response without unsupported claims
-9. Accuracy gives 0 for unsupported timeframes or guarantees
-10. Proportional normalization when dimensions are skipped
-11. run() evaluates replies only when role is explicitly 'agent'
-12. suggest_response() produces a valid, polite suggestion
-"""
-
 import sys
 from pathlib import Path
 
