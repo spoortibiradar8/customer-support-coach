@@ -1,17 +1,3 @@
-"""Focused unit tests for the Contextual Query Builder in Knowledge Recommendation Agent.
-
-Covers Step 4 requirements:
-  1. A message with no history.
-  2. A message with detected intent.
-  3. A follow-up message whose meaning depends on previous customer dialogue.
-  4. A history containing multiple topics, ensuring irrelevant topics are not indiscriminately added.
-  5. Missing or empty history.
-  6. Legacy history objects/dictionaries supported by the existing contract.
-  7. Missing product/session context.
-  8. Long history, verifying the query remains bounded.
-  9. Deterministic output for the same input.
-  10. Backward compatibility with existing agent calls.
-"""
 
 from __future__ import annotations
 
@@ -34,10 +20,7 @@ from backend.services.knowledge_agent import (
 def agent():
     return KnowledgeRecommendationAgent()
 
-
-# ---------------------------------------------------------------------------
 # 1. A message with no history
-# ---------------------------------------------------------------------------
 
 def test_query_message_with_no_history(agent):
     """When no history is present, query is identical to the cleaned message."""
@@ -46,9 +29,8 @@ def test_query_message_with_no_history(agent):
     assert query == "What is the refund window?"
 
 
-# ---------------------------------------------------------------------------
+
 # 2. A message with detected intent
-# ---------------------------------------------------------------------------
 
 def test_query_message_with_detected_intent(agent):
     """When detected intent is present, it is cleanly prefixed to the message."""
@@ -60,9 +42,7 @@ def test_query_message_with_detected_intent(agent):
     assert query == "Refund / billing - Can I return an opened box?"
 
 
-# ---------------------------------------------------------------------------
 # 3. A follow-up message whose meaning depends on previous customer dialogue
-# ---------------------------------------------------------------------------
 
 def test_query_followup_resolves_pronoun_from_previous_dialogue(agent):
     """Follow-up questions with pronouns resolve context from prior customer turn."""
@@ -89,9 +69,8 @@ def test_query_followup_resolves_pronoun_from_previous_dialogue(agent):
     assert "(re:" in query
 
 
-# ---------------------------------------------------------------------------
+
 # 4. A history containing multiple topics (irrelevant topics excluded)
-# ---------------------------------------------------------------------------
 
 def test_query_multi_topic_history_filters_irrelevant_topics(agent):
     """When history contains multiple past topics, only the relevant domain is added."""
@@ -127,9 +106,7 @@ def test_query_multi_topic_history_filters_irrelevant_topics(agent):
     assert "profile says locked" in query.lower() or "cannot log in" in query.lower()
 
 
-# ---------------------------------------------------------------------------
 # 5. Missing or empty history
-# ---------------------------------------------------------------------------
 
 @pytest.mark.parametrize("empty_val", [[], None])
 def test_query_missing_or_empty_history(agent, empty_val):
@@ -142,9 +119,7 @@ def test_query_missing_or_empty_history(agent, empty_val):
     assert query == "Where is my tracking number?"
 
 
-# ---------------------------------------------------------------------------
 # 6. Legacy history objects and dictionaries
-# ---------------------------------------------------------------------------
 
 def test_query_supports_legacy_history_formats(agent):
     """Supports both ConversationMessage dataclasses and legacy role/text dicts."""
@@ -174,9 +149,8 @@ def test_query_supports_legacy_history_formats(agent):
     assert "wireless earbuds" in query_obj.lower()
 
 
-# ---------------------------------------------------------------------------
+
 # 7. Missing product / session context
-# ---------------------------------------------------------------------------
 
 def test_query_missing_product_context_does_not_invent_product(agent):
     """When product context is missing, no product name is fabricated."""
@@ -201,9 +175,7 @@ def test_query_with_supplied_product_context(agent):
     assert "How do I update firmware?" in query
 
 
-# ---------------------------------------------------------------------------
 # 8. Long history (query remains bounded)
-# ---------------------------------------------------------------------------
 
 def test_query_remains_strictly_bounded_on_long_history(agent):
     """Even with extensive dialogue, the synthesized query never exceeds maximum bound."""
@@ -230,9 +202,7 @@ def test_query_remains_strictly_bounded_on_long_history(agent):
     assert "Can I get an extension" in query
 
 
-# ---------------------------------------------------------------------------
 # 9. Deterministic output for the same input
-# ---------------------------------------------------------------------------
 
 def test_query_is_deterministic(agent):
     """Repeated calls with identical request inputs produce byte-identical queries."""
@@ -251,9 +221,7 @@ def test_query_is_deterministic(agent):
         assert agent.build_query(req) == baseline
 
 
-# ---------------------------------------------------------------------------
 # 10. Backward compatibility with existing agent calls
-# ---------------------------------------------------------------------------
 
 def test_agent_backward_compatibility_run_and_recommend(agent):
     """Existing agent interfaces (recommend, run) operate seamlessly with contextual queries."""
