@@ -1,4 +1,4 @@
-# 🏗️ System Architecture & Engineering Design
+# System Architecture & Engineering Design
 
 > **AI Customer Support Coaching Assistant**  
 > An enterprise-grade, multi-agent platform combining generative customer simulation, local vector retrieval-augmented generation (RAG), and real-time coaching for frontline support professionals.
@@ -9,24 +9,24 @@
 
 ```mermaid
 flowchart TD
-    subgraph UI["🖥️ Presentation Layer"]
+    subgraph UI["Presentation Layer"]
         Client["Frontline Agent / Supervisor\n(Browser Client)"]
         Frontend["Streamlit Application\n(frontend/app.py & views/)"]
     end
 
-    subgraph Core["⚙️ Orchestration & Domain Models"]
+    subgraph Core["Orchestration & Domain Models"]
         Orchestrator["Workflow Orchestrator\n(backend/orchestrator/)"]
         DataModels["Core Data Models & Contracts\n(backend/core/data_models.py)"]
     end
 
-    subgraph Storage["💾 Persistence & Knowledge"]
+    subgraph Storage["Persistence & Knowledge"]
         SessionStore["Session Storage Service\n(backend/services/storage.py)"]
         RAGStore["Knowledge Base RAG Engine\n(backend/services/rag_stub.py)"]
         ChromaDB[("ChromaDB Vector Store\n(data/chroma/)")]
         DiskSessions[("Session Records\n(data/sessions/)")]
     end
 
-    subgraph Agents["🤖 Multi-Agent Ecosystem"]
+    subgraph Agents["Multi-Agent Ecosystem"]
         direction TB
         subgraph Stage1["Conversation & Sentiment"]
             A1["Customer Simulator Agent"]
