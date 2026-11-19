@@ -2,7 +2,7 @@
 
 **Project:** AI Customer Support Coaching Assistant  
 **Scope:** Platform Architecture & System Design Decisions  
-**Author:** AI Engineering & Support Platform Team  
+
 
 ---
 
