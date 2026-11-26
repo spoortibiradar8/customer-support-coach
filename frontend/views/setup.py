@@ -438,8 +438,16 @@ def render_new_session_card(has_chunks: bool, kb_docs: list[str]) -> None:
             )
             storage.save(session_obj)
             orchestrator.run_workflow(session_id=session_id, mode=mode)
-            st.toast(f"Session {session_id} started", icon="✅")
-            st.rerun()
+
+            # Load into console state and immediately transition to Live Coaching Console
+            from frontend.views.console import load_session_into_state
+            load_session_into_state(session_id)
+
+            if "page_console" in st.session_state:
+                st.switch_page(st.session_state["page_console"])
+            else:
+                st.toast(f"Session {session_id} started", icon="✅")
+                st.rerun()
 
 
 def render() -> None:

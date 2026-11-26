@@ -87,10 +87,10 @@ def render() -> None:
     for sid, created_at, mode, product, persona, max_turns in all_sessions:
         table_rows.append({
             "Session": sid,
-            "Mode": mode,
-            "Product": product,
-            "Persona": persona if persona else "—",
-            "Turns": max_turns if max_turns else "—",
+            "Mode": str(mode or "Simulator"),
+            "Product": str(product or "—"),
+            "Persona": str(persona) if persona else "—",
+            "Turns": str(max_turns) if max_turns else "—",
             "Created": _format_created(created_at),
         })
 
@@ -159,8 +159,17 @@ def render() -> None:
             with st.expander("Raw JSON", expanded=False):
                 st.json(session_data)
 
-            # Row for Download JSON and Delete buttons
-            col_dl, col_del, col_space = st.columns([1, 1, 2], gap="small")
+            # Row for Open in Console, Download JSON, and Delete buttons
+            col_open, col_dl, col_del = st.columns([1.5, 1, 1], gap="small")
+
+            with col_open:
+                if st.button("Open in Console 💬", type="primary", use_container_width=True, key=f"btn_open_{selected_sid}"):
+                    from frontend.views.console import load_session_into_state
+                    load_session_into_state(selected_sid)
+                    if "page_console" in st.session_state:
+                        st.switch_page(st.session_state["page_console"])
+                    else:
+                        st.rerun()
 
             with col_dl:
                 json_str = json.dumps(session_data, indent=2)

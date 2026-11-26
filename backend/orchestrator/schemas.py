@@ -2,6 +2,13 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
 
+from backend.orchestrator.escalation_schemas import (
+    EscalationFlag,
+    EscalationRiskLevel,
+    EscalationRiskRequest,
+    EscalationRiskResponse,
+    EscalationSeverity,
+)
 from backend.orchestrator.knowledge_schemas import (
     ConversationHistoryItem,
     KnowledgeExecutionStatus,
@@ -40,4 +47,9 @@ __all__ = [
     "KnowledgeRecommendationRequest",
     "KnowledgeRecommendationResponse",
     "RetrievedPassage",
+    "EscalationRiskLevel",
+    "EscalationSeverity",
+    "EscalationFlag",
+    "EscalationRiskRequest",
+    "EscalationRiskResponse",
 ]

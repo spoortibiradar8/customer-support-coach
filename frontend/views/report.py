@@ -88,8 +88,17 @@ def render():
 
     st.write("")
 
-    if st.button("Start new session", type="primary"):
-        session.view = "setup"
-        session.sid = None
-        st.query_params.clear()
-        st.rerun()
+    col_rep_new, col_rep_back = st.columns(2)
+    with col_rep_new:
+        if st.button("Start new session", type="primary", use_container_width=True):
+            session.view = "setup"
+            session.sid = None
+            st.query_params.clear()
+            if "page_dashboard" in st.session_state:
+                st.switch_page(st.session_state["page_dashboard"])
+            else:
+                st.rerun()
+    with col_rep_back:
+        if st.button("Return to Console", use_container_width=True):
+            session.view = "console"
+            st.rerun()

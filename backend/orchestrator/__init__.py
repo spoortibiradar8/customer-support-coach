@@ -1,6 +1,11 @@
 from backend.orchestrator.orchestrator import run_workflow
 from backend.orchestrator.schemas import (
     ConversationHistoryItem,
+    EscalationFlag,
+    EscalationRiskLevel,
+    EscalationRiskRequest,
+    EscalationRiskResponse,
+    EscalationSeverity,
     KnowledgeExecutionStatus,
     KnowledgeRecommendationRequest,
     KnowledgeRecommendationResponse,
@@ -18,4 +23,9 @@ __all__ = [
     "KnowledgeRecommendationRequest",
     "KnowledgeRecommendationResponse",
     "RetrievedPassage",
+    "EscalationRiskLevel",
+    "EscalationSeverity",
+    "EscalationFlag",
+    "EscalationRiskRequest",
+    "EscalationRiskResponse",
 ]
