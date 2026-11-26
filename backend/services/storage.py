@@ -68,9 +68,16 @@ def _normalize_session_dict(raw: dict[str, Any], sid: str) -> dict[str, Any]:
     if mode_norm == "Replay":
         replay_tx = (
             raw.get("replay_transcript")
+            or raw.get("replay_script")
+            or raw.get("config", {}).get("replay_script")
             or raw.get("metadata", {}).get("replay_script")
             or []
         )
+        if not replay_tx:
+            from backend.config import REPLAY_SAMPLE_PATH
+            from backend.services import validation
+            if REPLAY_SAMPLE_PATH.exists():
+                replay_tx = validation.parse_transcript(REPLAY_SAMPLE_PATH.read_text(encoding="utf-8"))
     else:
         replay_tx = None
 
@@ -95,7 +102,7 @@ def _normalize_session_dict(raw: dict[str, Any], sid: str) -> dict[str, Any]:
         except Exception:
             pass
 
-    return {
+    res = {
         "session_id": sid,
         "mode": mode_norm,
         "product": prod,
@@ -107,6 +114,15 @@ def _normalize_session_dict(raw: dict[str, Any], sid: str) -> dict[str, Any]:
         "status": status,
         "created_at": str(created_at),
     }
+    if "messages" in raw:
+        res["messages"] = raw["messages"]
+    if "analyses" in raw:
+        res["analyses"] = raw["analyses"]
+    if "tone" in raw:
+        res["tone"] = raw["tone"]
+    if "replay_idx" in raw:
+        res["replay_idx"] = raw["replay_idx"]
+    return res
 
 
 def save(session_data: Any) -> str | None:
@@ -123,10 +139,22 @@ def save(session_data: Any) -> str | None:
         sid = getattr(session_data, "session_id", None) or getattr(session_data, "sid", None)
         if not sid and hasattr(session_data, "get"):
             sid = session_data.get("session_id") or session_data.get("sid")
+        data = {}
         if hasattr(session_data, "to_dict"):
             data = session_data.to_dict()
         else:
-            data = {"session_id": sid}
+            for k in [
+                "session_id", "sid", "mode", "product", "scenario", "persona",
+                "max_turns", "replay_transcript", "kb_documents", "status",
+                "created_at", "messages", "analyses", "tone", "replay_idx", "config",
+            ]:
+                if hasattr(session_data, k):
+                    data[k] = getattr(session_data, k)
+                elif hasattr(session_data, "get") and session_data.get(k) is not None:
+                    data[k] = session_data.get(k)
+        if not sid:
+            sid = data.get("session_id") or data.get("sid")
+        data["session_id"] = sid
 
     if not sid:
         return None

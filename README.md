@@ -40,6 +40,7 @@ flowchart LR
         KA["Knowledge Recommendation Agent"]
         CS["Customer Simulator Engine"]
         CE["Coaching Evaluation Engine"]
+        ERM["Escalation Risk Monitor Agent"]
     end
 
     subgraph Storage["Knowledge & Storage"]
@@ -54,6 +55,7 @@ flowchart LR
     Orch --> KA
     Orch --> CS
     Orch --> CE
+    Orch --> ERM
     KA --> Chroma
     KA -.-> EvalData
     Orch --> Sessions
@@ -67,6 +69,7 @@ flowchart LR
 | **Knowledge Recommendation Agent** | `backend/agents/` | Context-aware dense semantic retrieval over support policies using ChromaDB. |
 | **Customer Simulator Agent** | `src/`, `public/` | Generates realistic customer turns with persona constraints and emotional progression. |
 | **Coaching Evaluation Engine** | `backend/services/` | Scores trainee turns on empathy, conciseness, calm formatting, and actionable steps. |
+| **Escalation Risk Monitor Agent** | `backend/agents/escalation_agent.py` | Multi-dimensional sentiment trajectory tracking, churn forecasting, supervisor demands, and de-escalation guidance. |
 | **Support Knowledge Base RAG** | `backend/services/rag_stub.py` | Sliding-window PDF chunking and vector indexing powered by `all-MiniLM-L6-v2`. |
 | **Retrieval Evaluation Framework** | `backend/evaluation/` | Automated IR benchmarking suite (Recall@K, Precision@K, MRR, NDCG@K, no-match F1). |
 | **Streamlit Coaching Dashboard** | `frontend/` | Multi-view coaching interface, saved session inspector, and interactive architecture. |

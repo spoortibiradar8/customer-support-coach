@@ -20,6 +20,10 @@ def _sample_payload() -> dict[str, Any]:
         "intent": "Refund / billing",
         "emotion": "Frustrated",
         "frustration_trend": "rising",
+        "escalation_risk": 72,
+        "escalation_level": "HIGH",
+        "warning_flags": ["FINANCIAL_FRAUD_DISPUTE", "SLA_TIME_CRITICALITY"],
+        "strategy": "Acknowledge feelings with deep empathy, own the issue, offer a clear timeline, and inform the customer that a supervisor is on standby.",
         "kb_query": "duplicate charge refund policy",
         "matched_kb": [
             "Billing policy",
@@ -91,6 +95,10 @@ def _normalize_payload(payload: dict[str, Any] | None) -> dict[str, Any]:
         "intent": payload.get("intent") or default["intent"],
         "emotion": payload.get("emotion") or default["emotion"],
         "frustration_trend": trend,
+        "escalation_risk": payload.get("escalation_risk") if payload.get("escalation_risk") is not None else payload.get("risk", default["escalation_risk"]),
+        "escalation_level": str(payload.get("escalation_level") or payload.get("risk_level") or default["escalation_level"]).upper(),
+        "warning_flags": payload.get("warning_flags") or default["warning_flags"],
+        "strategy": payload.get("strategy") or default["strategy"],
         "kb_query": payload.get("kb_query") or payload.get("query_context") or default["kb_query"],
         "matched_kb": matched_kb if matched_kb else default["matched_kb"],
     }
@@ -134,6 +142,10 @@ def _coerce_workflow_payload(message: str) -> dict[str, Any]:
                     or _frustration_trend(analysis.get("frustration", fallback.get("frustration", 0)))
                     or default["frustration_trend"]
                 ),
+                "escalation_risk": analysis.get("risk", fallback.get("risk", default["escalation_risk"])),
+                "escalation_level": analysis.get("risk_level", fallback.get("risk_level", default["escalation_level"])),
+                "warning_flags": analysis.get("warning_flags", fallback.get("warning_flags", default["warning_flags"])),
+                "strategy": analysis.get("strategy", fallback.get("strategy", default["strategy"])),
                 "kb_query": analysis.get("kb_query") or fallback.get("kb_query") or customer_message,
                 "matched_kb": analysis.get("matched_kb") or fallback.get("chunks") or default["matched_kb"],
             }
@@ -167,7 +179,11 @@ def _coerce_workflow_payload(message: str) -> dict[str, Any]:
                 "intent": analysis.get("intent", default["intent"]),
                 "emotion": analysis.get("emotion", default["emotion"]),
                 "frustration": analysis.get("frustration", 0),
-                "frustration_trend": _frustration_trend(analysis.get("frustration", 0)),
+                "frustration_trend": analysis.get("frustration_trend") or _frustration_trend(analysis.get("frustration", 0)),
+                "escalation_risk": analysis.get("risk", default["escalation_risk"]),
+                "escalation_level": analysis.get("risk_level", default["escalation_level"]),
+                "warning_flags": analysis.get("warning_flags", default["warning_flags"]),
+                "strategy": analysis.get("strategy", default["strategy"]),
                 "kb_query": clean_message,
                 "matched_kb": matched_kb,
             }
@@ -320,6 +336,12 @@ def render() -> None:
             intent_text = escape(str(payload["intent"]))
             emotion_text = escape(str(payload["emotion"]))
             trend_text = escape(str(payload["frustration_trend"]))
+            risk_score = int(payload.get("escalation_risk", 0))
+            risk_level = escape(str(payload.get("escalation_level", "LOW")))
+            strategy_text = escape(str(payload.get("strategy", "")))
+            warning_flags = payload.get("warning_flags", [])
+            flags_html = " ".join(f"<code style='background:rgba(239,68,68,0.12); color:#b91c1c; padding:2px 6px; border-radius:4px; font-size:0.75rem;'>{escape(str(f))}</code>" for f in warning_flags) if warning_flags else "<span style='color:#10b981; font-size:0.8rem;'>None</span>"
+
             kb_items = [escape(str(item)) for item in payload.get("matched_kb", [])[:3]]
             kb_html = "".join(f"<li>{item}</li>" for item in kb_items) or "<li>No KB matches returned.</li>"
 
@@ -336,6 +358,12 @@ def render() -> None:
                             <div class="agent-metric"><span class="label">Intent</span><span class="value">{intent_text}</span></div>
                             <div class="agent-metric"><span class="label">Emotion</span><span class="value">{emotion_text}</span></div>
                             <div class="agent-metric"><span class="label">Trend</span><span class="value">{trend_text}</span></div>
+                            <div class="agent-metric"><span class="label">Escalation Risk</span><span class="value">{risk_score}% ({risk_level})</span></div>
+                        </div>
+                        <div class="agent-kb" style="margin-bottom: 0.8rem;">
+                            <div class="label" style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:#6b7280; font-weight:700;">Escalation Risk Monitor (Agent A5)</div>
+                            <div style="font-size:0.82rem; margin-top:0.35rem; color:#1f2937;"><strong>Active Flags:</strong> {flags_html}</div>
+                            <div style="font-size:0.82rem; margin-top:0.3rem; color:#4b5563;"><strong>Strategy:</strong> {strategy_text}</div>
                         </div>
                         <div class="agent-kb">
                             <div class="label" style="font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:#6b7280; font-weight:700;">Knowledge matches</div>

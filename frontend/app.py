@@ -12,7 +12,7 @@ import streamlit as st
 
 from backend.services import rag_stub, storage
 from frontend.theme import PAGE_THEMES, apply_theme
-from frontend.views import architecture, agent_workflow_demo, sessions, setup
+from frontend.views import architecture, agent_workflow_demo, console, sessions, setup
 
 # Configure Streamlit page settings
 st.set_page_config(
@@ -28,6 +28,11 @@ page_dashboard = st.Page(
     title="Dashboard",
     url_path="dashboard",
     default=True,
+)
+page_console = st.Page(
+    console.render,
+    title="Coaching Console",
+    url_path="console",
 )
 page_sessions = st.Page(
     sessions.render,
@@ -45,9 +50,14 @@ page_milestone2 = st.Page(
     url_path="workflow-demo",
 )
 
+# Stash page objects in session state for programmatic switching
+st.session_state["page_dashboard"] = page_dashboard
+st.session_state["page_console"] = page_console
+st.session_state["page_sessions"] = page_sessions
+
 # Navigation with hidden native position for custom styled sidebar
 nav = st.navigation(
-    [page_dashboard, page_sessions, page_architecture, page_milestone2],
+    [page_dashboard, page_console, page_sessions, page_architecture, page_milestone2],
     position="hidden",
 )
 
@@ -77,6 +87,7 @@ with st.sidebar:
 
     st.markdown('<div class="sb-section-label">Navigation</div>', unsafe_allow_html=True)
     st.page_link(page_dashboard, label="Dashboard", icon=":material/dashboard:")
+    st.page_link(page_console, label="Coaching Console", icon=":material/forum:")
     st.page_link(page_sessions, label="Sessions", icon=":material/list_alt:")
     st.page_link(page_architecture, label="Architecture", icon=":material/account_tree:")
     st.page_link(page_milestone2, label="Workflow Demo", icon=":material/psychology:")

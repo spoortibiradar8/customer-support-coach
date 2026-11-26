@@ -11,7 +11,14 @@ from fastapi import FastAPI, File, HTTPException, UploadFile, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
+from backend.agents.escalation_agent import EscalationRiskMonitorAgent
 from backend.orchestrator import orchestrator
+from backend.orchestrator.escalation_schemas import (
+    EscalationFlag,
+    EscalationRiskLevel,
+    EscalationRiskRequest,
+    EscalationRiskResponse,
+)
 from backend.services import pipeline_stub, rag_stub, storage
 
 logger = logging.getLogger(__name__)
@@ -24,6 +31,8 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+
+escalation_monitor = EscalationRiskMonitorAgent()
 
 # Enable CORS for localhost:3000 and 127.0.0.1:3000
 app.add_middleware(
@@ -55,6 +64,11 @@ class CustomerAnalysis(BaseModel):
     frustration_percent: int
     satisfaction_percent: int
     recommendations: list[RecommendationItem]
+    escalation_risk: int = 0
+    escalation_level: str = "low"
+    warning_flags: list[str] = Field(default_factory=list)
+    requires_supervisor: bool = False
+    de_escalation_strategy: str = ""
 
 
 class NextCustomerMessageResponse(BaseModel):
@@ -67,6 +81,11 @@ class NextCustomerMessageResponse(BaseModel):
     frustration_percent: int
     satisfaction_percent: int
     recommendations: list[RecommendationItem]
+    escalation_risk: int = 0
+    escalation_level: str = "low"
+    warning_flags: list[str] = Field(default_factory=list)
+    requires_supervisor: bool = False
+    de_escalation_strategy: str = ""
 
 
 class CustomerMessageRequest(BaseModel):
@@ -439,6 +458,11 @@ def generate_next_customer_message(session_id: str):
         "frustration_percent": frustration_pct,
         "satisfaction_percent": satisfaction_pct,
         "recommendations": [r.model_dump() for r in recommendations],
+        "escalation_risk": int(raw_analysis.get("risk", 0)),
+        "escalation_level": str(raw_analysis.get("risk_level", "low")),
+        "warning_flags": list(raw_analysis.get("warning_flags", [])),
+        "requires_supervisor": bool(raw_analysis.get("requires_supervisor", False)),
+        "de_escalation_strategy": str(raw_analysis.get("strategy", "")),
     }
 
     # Store per-message analysis inside the message itself
@@ -470,6 +494,11 @@ def generate_next_customer_message(session_id: str):
         frustration_percent=frustration_pct,
         satisfaction_percent=satisfaction_pct,
         recommendations=recommendations,
+        escalation_risk=int(raw_analysis.get("risk", 0)),
+        escalation_level=str(raw_analysis.get("risk_level", "low")),
+        warning_flags=list(raw_analysis.get("warning_flags", [])),
+        requires_supervisor=bool(raw_analysis.get("requires_supervisor", False)),
+        de_escalation_strategy=str(raw_analysis.get("strategy", "")),
     )
 
 
@@ -528,6 +557,11 @@ def submit_customer_message(session_id: str, body: CustomerMessageRequest):
         "frustration_percent": frustration_pct,
         "satisfaction_percent": satisfaction_pct,
         "recommendations": [r.model_dump() for r in recommendations],
+        "escalation_risk": int(raw_analysis.get("risk", 0)),
+        "escalation_level": str(raw_analysis.get("risk_level", "low")),
+        "warning_flags": list(raw_analysis.get("warning_flags", [])),
+        "requires_supervisor": bool(raw_analysis.get("requires_supervisor", False)),
+        "de_escalation_strategy": str(raw_analysis.get("strategy", "")),
     }
 
     customer_message_record = {
@@ -557,6 +591,11 @@ def submit_customer_message(session_id: str, body: CustomerMessageRequest):
         frustration_percent=frustration_pct,
         satisfaction_percent=satisfaction_pct,
         recommendations=recommendations,
+        escalation_risk=int(raw_analysis.get("risk", 0)),
+        escalation_level=str(raw_analysis.get("risk_level", "low")),
+        warning_flags=list(raw_analysis.get("warning_flags", [])),
+        requires_supervisor=bool(raw_analysis.get("requires_supervisor", False)),
+        de_escalation_strategy=str(raw_analysis.get("strategy", "")),
     )
 
 
@@ -654,6 +693,65 @@ def end_session(session_id: str):
         status="completed",
         message="Session completed successfully.",
     )
+
+
+# ── Escalation Risk Monitor Endpoints ─────────────────────────────────
+
+@app.post(
+    "/api/sessions/{session_id}/escalation-risk",
+    response_model=EscalationRiskResponse,
+    summary="Evaluate escalation risk for a session",
+    tags=["Escalation Monitor"],
+)
+def evaluate_session_escalation_risk(session_id: str):
+    """Run Escalation Risk Monitor Agent on the latest conversation state of the session."""
+    session = storage.load(session_id)
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Session '{session_id}' not found.",
+        )
+    messages = session.get("messages") or []
+    if not messages:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Session has no messages to evaluate.",
+        )
+    latest_customer = None
+    prior_turns = []
+    for m in messages:
+        if m.get("role") == "customer":
+            if latest_customer is not None:
+                prior_turns.append({"role": "customer", "text": latest_customer})
+            latest_customer = m.get("text")
+        else:
+            prior_turns.append(m)
+
+    if not latest_customer:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No customer messages found in session history.",
+        )
+
+    req = EscalationRiskRequest(
+        message=latest_customer,
+        history=prior_turns,
+        session_id=session_id,
+        customer_type=session.get("customer_type") or session.get("persona"),
+        product=session.get("product"),
+    )
+    return escalation_monitor.analyze(req)
+
+
+@app.post(
+    "/api/agents/escalation-risk",
+    response_model=EscalationRiskResponse,
+    summary="Evaluate escalation risk on raw message and history",
+    tags=["Escalation Monitor"],
+)
+def analyze_escalation_risk(body: EscalationRiskRequest):
+    """Standalone entry point to evaluate customer turn and history using Escalation Risk Monitor."""
+    return escalation_monitor.analyze(body)
 
 
 # ── Evaluation Endpoints ───────────────────────────────────────────────

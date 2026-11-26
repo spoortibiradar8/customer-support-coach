@@ -412,56 +412,248 @@ class CoachingResponseAgent:
             "notes": notes,
         }
 
-    def suggest_response(self, customer_text: str, session: Any = None) -> str:
+    def suggest_response(
+        self,
+        customer_text: str,
+        session: Any = None,
+        history: list[dict[str, Any]] | None = None,
+        intent: str | None = None,
+        emotion: str | None = None,
+        escalation_response: Any = None,
+        policy_chunks: list[dict[str, Any]] | None = None,
+    ) -> str:
         """Generate a polite, helpful response grounded in retrieved policy documentation.
         
-        Uses rag_stub.retrieve() to search the knowledge base. If policy information
-        is found above the score threshold, it grounds the answer in that policy.
-        If no relevant policy is found, it does not invent fake rules.
+        Dynamically adapts across conversation turns based on customer intent, emotion,
+        escalation signals, and provided account/order details without repetitive phrasing.
         """
+        # Resolve product name
+        product_name = None
+        if isinstance(session, dict):
+            product_name = session.get("product") or session.get("config", {}).get("product")
+        elif session:
+            product_name = getattr(session, "product", None)
+            if not product_name and hasattr(session, "config") and isinstance(session.config, dict):
+                product_name = session.config.get("product")
+        if not product_name or str(product_name).strip() in ("", "None"):
+            product_name = "our store"
+        product_name = str(product_name).strip()
+
         query = (customer_text or "").strip()
         if not query:
-            return "Hello! How may I assist you with your inquiry today?"
+            return f"Hello! How may I assist you with your {product_name} inquiry today?"
+        query_lower = query.lower()
 
-        product_name = "our store"
-        if session:
-            product_name = getattr(session, "product", None) or "our store"
+        # Count turns from history to distinguish initial vs. follow-up stages
+        hist_list = history or []
+        if not hist_list and session:
+            if isinstance(session, dict):
+                hist_list = session.get("messages", [])
+            elif hasattr(session, "messages"):
+                hist_list = getattr(session, "messages", []) or []
 
-        # Retrieve relevant policy chunks from ChromaDB
-        retrieved_chunks: list[dict[str, Any]] = []
-        try:
-            retrieved_chunks = rag_stub.retrieve(query=query, k=2)
-        except Exception as exc:
-            logger.warning("RAG retrieval failed during response suggestion: %s", exc)
+        customer_turns = [
+            m for m in hist_list
+            if (isinstance(m, dict) and m.get("role") in ("customer", "user"))
+            or (hasattr(m, "speaker") and str(getattr(m, "speaker", "")).lower() in ("customer", "user"))
+        ]
+        # In Live Console, current message is already appended to session.messages
+        is_first_turn = len(customer_turns) <= 1
 
-        # Filter out chunks that fell below the relevance score threshold
+        # Detect specific details in customer query or conversation history
+        order_match = re.search(r"\b(#\d+|[A-Za-z]{2,}-\d+|\d{4,})\b", query)
+        has_order_no = bool(order_match)
+        order_val = order_match.group(1) if order_match else ""
+
+        # Scan previous history for order number if not in current query
+        if not order_val and hist_list:
+            for m in hist_list:
+                prev_text = m.get("text") if isinstance(m, dict) else getattr(m, "text", "")
+                m_match = re.search(r"\b(#\d+|[A-Za-z]{2,}-\d+|\d{4,})\b", str(prev_text or ""))
+                if m_match:
+                    order_val = m_match.group(1)
+                    has_order_no = True
+                    break
+
+        has_amount = bool(re.search(r"(\$\d+|\b\d+\s*(dollars|cents)\b)", query_lower))
+        has_email = bool(re.search(r"[\w.-]+@[\w.-]+\.\w+", query))
+        has_specific_details = has_order_no or has_amount or has_email
+
+        # Detect intent if not provided
+        if not intent:
+            if any(w in query_lower for w in ["refund", "charge", "billing", "invoice", "payment", "money", "twice"]):
+                intent = "Refund / billing"
+            elif any(w in query_lower for w in ["cancel", "close my account", "unsubscribe"]):
+                intent = "Cancellation"
+            elif any(w in query_lower for w in ["delivery", "order", "shipping", "package", "tracking", "arrived"]):
+                intent = "Delivery / order"
+            elif any(w in query_lower for w in ["password", "account", "locked", "sign in", "login"]):
+                intent = "Account access"
+            elif any(w in query_lower for w in ["error", "broken", "bug", "not working", "crash"]):
+                intent = "Technical issue"
+            else:
+                intent = "General inquiry"
+
+        # Retrieve relevant policy chunks if not pre-supplied
+        retrieved_chunks = policy_chunks
+        if retrieved_chunks is None:
+            try:
+                retrieved_chunks = rag_stub.retrieve(query=query, k=2)
+            except Exception as exc:
+                logger.warning("RAG retrieval failed during response suggestion: %s", exc)
+                retrieved_chunks = []
+
         valid_chunks = [
             chunk for chunk in retrieved_chunks
             if chunk.get("score", 0.0) >= self.min_policy_score
         ]
 
-        # Case 1: Policy information was found
-        if valid_chunks:
-            top_hit = valid_chunks[0]
-            doc_name = top_hit.get("doc_name") or top_hit.get("source", "our documentation")
+        top_hit = valid_chunks[0] if valid_chunks else None
+        doc_name = ""
+        policy_excerpt = ""
+        if top_hit:
+            raw_doc = top_hit.get("doc_name") or top_hit.get("source", "our documentation")
+            if raw_doc.endswith(".pdf"):
+                doc_name = raw_doc[:-4].replace("_", " ").title()
+            else:
+                doc_name = raw_doc
             doc_text = top_hit.get("text", "").strip()
+            sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+", doc_text) if s.strip()]
+            clean_sentences = [
+                s for s in sentences
+                if len(s) > 20 and s[0].isupper()
+            ]
+            if clean_sentences:
+                policy_excerpt = clean_sentences[0]
+            elif sentences:
+                policy_excerpt = sentences[0]
+            if len(policy_excerpt) > 130:
+                policy_excerpt = policy_excerpt[:130].rstrip() + "..."
 
-            # Extract the first sentence of the retrieved policy chunk
-            policy_excerpt = doc_text.split(".")[0].strip()
-            if len(policy_excerpt) > 120:
-                policy_excerpt = policy_excerpt[:120].rstrip() + "..."
-
-            return (
-                f"Thank you for contacting us regarding {product_name}. "
-                f"Under our {doc_name} policy ({policy_excerpt}.), I will be happy to assist you. "
-                "Could you please share your order or account details so I can take care of this for you?"
+        # Escalation & supervisor signals
+        requires_supervisor = False
+        warning_flags: list[str] = []
+        suggested_phrase = ""
+        if escalation_response:
+            requires_supervisor = getattr(escalation_response, "requires_supervisor", False)
+            warning_flags = getattr(escalation_response, "warning_flags", [])
+            suggested_phrase = getattr(escalation_response, "suggested_de_escalation_phrase", "")
+        if not requires_supervisor:
+            requires_supervisor = any(
+                w in query_lower
+                for w in ["supervisor", "manager", "team lead", "transfer me", "speak to someone else"]
             )
 
-        # Case 2: No policy match found — do NOT invent policy rules
+        # ── Case 1: Closing / Gratitude / Customer affirmation ──────────────
+        if any(w in query_lower for w in ["thank you", "thanks", "great", "perfect", "appreciate", "works now", "that helped", "all set", "goodbye", "ok thanks"]):
+            return (
+                f"You're very welcome! I'm glad I could help resolve this for you today regarding {product_name}. "
+                "Please let us know if there is anything else you need, and have a wonderful day!"
+            )
+
+        # ── Case 1b: Direct Refund Request ("can u refund my amount", etc.) ──
+        is_direct_refund_req = any(
+            p in query_lower
+            for p in [
+                "can you refund", "can u refund", "will you refund", "will i get a refund",
+                "can i get a refund", "refund my amount", "refund my money", "i want a refund",
+                "give me a refund", "get a refund", "refund me", "can i have a refund",
+                "process my refund", "issue a refund", "refund please", "please refund",
+            ]
+        ) or (("refund" in query_lower or "charged double" in query_lower or "charged twice" in query_lower) and any(w in query_lower for w in ["can", "please", "want", "my", "amount", "money"]))
+
+        if is_direct_refund_req:
+            ref_policy = doc_name or "Returns and Refunds"
+            if order_val:
+                return (
+                    f"Yes, absolutely. Under our {ref_policy} policy, duplicate charges and verified returns are fully refundable. "
+                    f"I have your order {order_val} on file and can process the refund for your {product_name} right away. "
+                    "Shall I go ahead and issue the refund to your original payment method?"
+                )
+            return (
+                f"Yes, absolutely. Under our {ref_policy} policy, duplicate charges are fully refundable once verified. "
+                f"I would be glad to process a refund for the charge on your {product_name} right away. "
+                "Could you please share your order number or the email address on your account so I can look up the transaction and issue the refund?"
+            )
+
+        # ── Case 2: Timeframe or Status inquiry ─────────────────────────────
+        if any(w in query_lower for w in ["how long", "when will", "how many days", "how much time", "status", "timeline", "when do i", "when can i", "estimate"]):
+            if "refund" in query_lower or intent == "Refund / billing":
+                return (
+                    f"Under our {doc_name or 'refund'} policy, refunds are typically processed back to your original payment "
+                    "method within 3 to 5 business days. I will monitor this to ensure there are no delays for your account."
+                )
+            if "delivery" in query_lower or "shipping" in query_lower or intent == "Delivery / order":
+                return (
+                    f"Standard delivery for {product_name} typically takes 3 to 5 business days. Since your parcel is taking "
+                    "longer, I can initiate an immediate courier trace or prepare a replacement order for you."
+                )
+            return (
+                f"This process typically completes within 24 to 48 hours. I will keep track of your {product_name} request "
+                "and ensure you receive an update as soon as it is completed."
+            )
+
+        # ── Case 3: Supervisor Request or Severe Escalation ───────────────────
+        if requires_supervisor or "SUPERVISOR_REQUEST" in warning_flags:
+            intent_label = intent.lower() if intent else "inquiry"
+            return (
+                f"I completely understand your frustration and your request to speak with a supervisor. "
+                "I will be glad to connect you with a team lead right away. Before I initiate the transfer, "
+                f"I also have the authority to resolve this {intent_label} directly for you on {product_name} so you don't have to wait. "
+                "Would you prefer the supervisor transfer, or should I proceed with the resolution now?"
+            )
+
+        # ── Case 4: Severe Frustration / Churn or Legal threat ────────────────
+        if suggested_phrase and ("CHURN_THREAT" in warning_flags or "LEGAL_REGULATORY_THREAT" in warning_flags or emotion == "Angry"):
+            return (
+                f"I truly apologize for this frustrating experience with {product_name}. {suggested_phrase} "
+                "Let me prioritize your request immediately — please let me know your preferred resolution so I can take action right away."
+            )
+
+        # ── Case 5: Customer provided specific details (Order ID, amount, email) ─
+        if has_specific_details and not is_first_turn:
+            policy_clause = f"Under our {doc_name} guidelines ({policy_excerpt}), " if policy_excerpt else ""
+            return (
+                f"Thank you for sharing those details. I've pulled up your account record for {product_name}. "
+                f"{policy_clause}I can verify the transaction and process the necessary steps for you right now. "
+                "Shall I go ahead and complete this adjustment?"
+            )
+
+        # ── Case 6: Customer reporting persistent failure or steps tried (Turn 2+) ─
+        if not is_first_turn and any(w in query_lower for w in ["still", "tried", "didn't work", "not working", "again", "same", "waiting"]):
+            if policy_excerpt:
+                return (
+                    f"I understand this is still not working for {product_name}. According to our {doc_name} documentation, "
+                    f"{policy_excerpt}. Since that step was already attempted, I will escalate this directly to our support team for immediate review."
+                )
+            return (
+                f"Thank you for confirming that. Since the standard steps did not resolve this for your {product_name} account, "
+                "I am submitting this for specialized manual review right away so we can get it fixed for you."
+            )
+
+        # ── Case 7: Initial Customer Query (Turn 1) ───────────────────────────
+        if emotion in ("Angry", "Frustrated"):
+            opener = f"I am very sorry for the trouble with {product_name}, and I completely understand your frustration. "
+        elif emotion in ("Confused", "Impatient"):
+            opener = f"Thanks for reaching out about {product_name}. Let's get this sorted out for you right away. "
+        else:
+            opener = f"Hello, thank you for contacting us regarding {product_name}. I'd be glad to help with your {intent.lower() if intent else 'inquiry'}. "
+
+        if has_specific_details and order_val:
+            policy_clause = f" Under our {doc_name} policy ({policy_excerpt}), I will be happy to assist you." if policy_excerpt else ""
+            return (
+                f"{opener}I've located your record for order {order_val}.{policy_clause} "
+                "Let me verify the transaction details and initiate the resolution for you right away."
+            )
+
+        if policy_excerpt:
+            return (
+                f"{opener}Under our {doc_name} policy ({policy_excerpt}), I will be happy to assist you. "
+                "Could you please share your order or account details so I can take care of this for you?"
+            )
         return (
-            f"Thank you for reaching out regarding {product_name}. "
-            "I understand your request and would be glad to help resolve this for you. "
-            "Could you please provide a few more details so I can look into this right away?"
+            f"{opener}I understand your request and would be glad to help resolve this for you. "
+            "Could you please share a few more details or your order number so I can look into this right away?"
         )
 
     def run(self, session: Any, message: str, role: str | None = None) -> AgentResult:

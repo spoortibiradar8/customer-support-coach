@@ -1,7 +1,10 @@
 from backend.agents.coaching_agent import CoachingResponseAgent
+from backend.agents.escalation_agent import EscalationRiskMonitorAgent
+from backend.orchestrator.escalation_schemas import EscalationRiskRequest
 from backend.services import rag_stub
 
 _coaching_agent = CoachingResponseAgent()
+_escalation_agent = EscalationRiskMonitorAgent()
 
 
 NEG = [
@@ -106,7 +109,10 @@ def analyze_turn(text, history, cfg):
     t = text.lower()
     neg = sum(word in t for word in NEG)
     pos = sum(word in t for word in POS)
-    n_cust = sum(message["role"] == "customer" for message in history)
+    n_cust = sum(
+        1 for m in history
+        if (m.get("role") if isinstance(m, dict) else getattr(m, "speaker", None)) == "customer"
+    )
 
     urgency = 6 if any(word in t for word in ("today", "asap", "immediately", "urgent")) else 0
     billing_issue = 8 if any(word in t for word in ("charged", "refund", "billing", "invoice", "payment", "twice")) else 0
@@ -137,39 +143,47 @@ def analyze_turn(text, history, cfg):
         (name for name, words in INTENTS.items() if any(word in t for word in words)),
         "General inquiry",
     )
-    risk = max(0, min(100, int(frustration * 0.8 + neg * 6)))
 
-    reasons = []
-    if neg:
-        reasons.append(f"{neg} negative cue(s) in the message")
-    if n_cust >= 3 and frustration >= 50:
-        reasons.append("customer has contacted repeatedly")
-    if any(word in t for word in ("cancel", "refund", "manager")):
-        reasons.append("explicit churn/escalation request")
+    # Invoke EscalationRiskMonitorAgent for calibrated risk scoring & warning flags
+    cfg_dict = cfg if isinstance(cfg, dict) else getattr(cfg, "__dict__", {})
+    req = EscalationRiskRequest(
+        message=text,
+        history=history,
+        frustration_score=frustration,
+        turn_count=n_cust + 1,
+        customer_type=cfg_dict.get("customer_type") or cfg_dict.get("persona"),
+        product=cfg_dict.get("product"),
+    )
+    esc_response = _escalation_agent.analyze(req)
 
-    opener = {
-        "Angry": "I completely understand how frustrating this is, and I'm sorry. ",
-        "Frustrated": "I'm sorry for the trouble — let's sort this out together. ",
-        "Neutral": "Thanks for the details. ",
-        "Satisfied": "Glad to hear that! ",
-    }[emotion]
+    chunks = rag_stub.retrieve(text, k=3)
+    suggestion = _coaching_agent.suggest_response(
+        customer_text=text,
+        session=cfg_dict,
+        history=history,
+        intent=intent,
+        emotion=emotion,
+        escalation_response=esc_response,
+        policy_chunks=chunks,
+    )
 
     return {
         "intent": intent,
         "emotion": emotion,
         "sentiment": sentiment,
         "frustration": frustration,
-        "risk": risk,
-        "risk_reason": "; ".join(reasons) or "No strong escalation signals.",
-        "strategy": (
-            "Acknowledge, own the issue, offer a concrete next step and timeline; "
-            "offer a supervisor if asked."
-        ) if risk >= 70 else "Keep resolving; confirm understanding.",
-        "suggestion": (
-            f"{opener}Regarding your {intent.lower()}, here's what I'll do next: "
-            "[use the knowledge panel steps]. Does that work for you?"
-        ),
-        "chunks": rag_stub.retrieve(text, k=3),
+        "risk": esc_response.risk_score,
+        "risk_level": esc_response.risk_level.value,
+        "risk_reason": "; ".join(esc_response.reasons) or "No strong escalation signals.",
+        "strategy": esc_response.recommended_strategy,
+        "warning_flags": esc_response.warning_flags,
+        "flag_details": [f.model_dump() for f in esc_response.flag_details],
+        "requires_supervisor": esc_response.requires_supervisor,
+        "tier2_eligible": esc_response.tier2_eligible,
+        "frustration_trend": esc_response.frustration_trend,
+        "suggested_de_escalation_phrase": esc_response.suggested_de_escalation_phrase,
+        "suggestion": suggestion,
+        "chunks": chunks,
     }
 
 
