@@ -1,3 +1,4 @@
+
 from backend.agents.coaching_agent import CoachingResponseAgent
 from backend.services import rag_stub
 
@@ -10,16 +11,39 @@ NEG = [
     "broken", "cancel", "lawyer", "complaint", "charged", "twice",
     "problem", "issue", "!!",
 ]
+
 POS = [
     "thanks", "thank you", "great", "perfect", "appreciate", "resolved",
     "works", "happy", "helpful",
 ]
+
 INTENTS = {
-    "Refund / billing": ["refund", "charge", "billing", "invoice", "payment", "money"],
-    "Cancellation": ["cancel", "close my account", "unsubscribe"],
-    "Technical issue": ["error", "not working", "broken", "crash", "login", "bug", "app"],
-    "Delivery / order": ["delivery", "order", "shipping", "package", "tracking"],
-    "Account access": ["password", "account", "locked", "access"],
+    "Account access": [
+        "password", "password reset", "reset link",
+        "forgot password", "login", "log in",
+        "sign in", "signin", "account access",
+        "locked account", "unable to access",
+        "registered email", "reset email",
+        "can't access", "cannot access",
+        "unable to log in", "unable to sign in",
+        "account locked", "locked out",
+    ],
+    "Refund / billing": [
+        "refund", "charge", "billing", "invoice",
+        "payment", "money",
+    ],
+    "Cancellation": [
+        "cancel", "close my account", "unsubscribe",
+    ],
+    "Technical issue": [
+        "error", "not working", "broken", "crash",
+        "bug", "app",
+    ],
+    "Delivery / order": [
+        "delivery", "delivered", "shipping",
+        "package", "tracking", "courier",
+        "shipment", "parcel",
+    ],
 }
 
 LADDERS = {
@@ -55,22 +79,33 @@ LADDERS = {
 
 
 def derive_recommendation_type(chunk: dict) -> str:
-    """Derive recommendation type ('Article' | 'FAQ' | 'Troubleshooting') from chunk heading/content."""
     doc_name = (chunk.get("doc_name") or chunk.get("source") or "").lower()
     text = (chunk.get("text") or "").lower()
 
-    if "faq" in doc_name or "?" in text or "how do i" in text or "can i" in text or "what is" in text:
+    if (
+        "faq" in doc_name
+        or "?" in text
+        or "how do i" in text
+        or "can i" in text
+        or "what is" in text
+    ):
         return "FAQ"
 
-    troubleshoot_words = ("troubleshoot", "repair", "fix", "damaged", "faulty", "error", "steps", "replace", "issue")
-    if any(k in doc_name for k in ("troubleshoot", "repair")) or any(k in text for k in troubleshoot_words):
+    troubleshoot_words = (
+        "troubleshoot", "repair", "fix", "damaged", "faulty",
+        "error", "steps", "replace", "issue"
+    )
+
+    if (
+        any(k in doc_name for k in ("troubleshoot", "repair"))
+        or any(k in text for k in troubleshoot_words)
+    ):
         return "Troubleshooting"
 
     return "Article"
 
 
 def simulate_customer(cfg, turn):
-    """Return a simulated customer message for the selected persona and emotional progression."""
     progression = (cfg.get("emotional_progression") or "").lower()
     persona = cfg.get("customer_type") or cfg.get("persona", "Calm")
 
@@ -81,6 +116,7 @@ def simulate_customer(cfg, turn):
             ladder_key = "Impatient"
         else:
             ladder_key = "Angry"
+
     elif progression == "calms_down":
         if turn == 0:
             ladder_key = "Angry"
@@ -88,13 +124,16 @@ def simulate_customer(cfg, turn):
             ladder_key = "Impatient"
         else:
             ladder_key = "Calm"
+
     elif progression == "stays_calm":
         ladder_key = "Calm"
+
     else:
         ladder_key = persona if persona in LADDERS else "Calm"
 
     ladder = LADDERS.get(ladder_key, LADDERS["Calm"])
     message_index = min(turn, len(ladder) - 1)
+
     return ladder[message_index].format(
         p=cfg.get("product", "your product"),
         s=cfg.get("scenario", ""),
@@ -102,14 +141,84 @@ def simulate_customer(cfg, turn):
 
 
 def analyze_turn(text, history, cfg):
-    """Analyze intent, sentiment, escalation risk, coaching, and knowledge."""
     t = text.lower()
     neg = sum(word in t for word in NEG)
     pos = sum(word in t for word in POS)
     n_cust = sum(message["role"] == "customer" for message in history)
 
-    urgency = 6 if any(word in t for word in ("today", "asap", "immediately", "urgent")) else 0
-    billing_issue = 8 if any(word in t for word in ("charged", "refund", "billing", "invoice", "payment", "twice")) else 0
+    repeat_cues = (
+        "again",
+        "still unresolved",
+        "not resolved",
+        "nobody helped",
+        "no one helped",
+        "contacted support",
+        "contacted you",
+        "third time",
+        "3 times",
+        "three times",
+        "multiple times",
+        "repeatedly",
+        "keep contacting",
+    )
+
+    unresolved_cues = (
+        "still unresolved",
+        "not resolved",
+        "nobody helped",
+        "no one helped",
+        "not fixed",
+        "no response",
+        "ignored",
+        "nobody has resolved",
+        "hasn't been resolved",
+        "has not been resolved",
+    )
+
+    issue_cues = (
+        "unable to",
+        "can't",
+        "cannot",
+        "not able to",
+        "haven't received",
+        "have not received",
+        "not received",
+        "doesn't work",
+        "does not work",
+        "not working",
+        "failed",
+        "not arrived",
+        "still facing",
+        "still having",
+        "having trouble",
+        "unable to log in",
+        "unable to sign in",
+        "can't access",
+        "cannot access",
+        "can't log in",
+        "cannot log in",
+        "can't sign in",
+        "cannot sign in",
+    )
+
+    repeated_contact = any(word in t for word in repeat_cues)
+    unresolved_issue = any(word in t for word in unresolved_cues)
+
+    unresolved_problem = (
+        unresolved_issue
+        or any(word in t for word in issue_cues)
+    )
+
+    urgency = 6 if any(
+        word in t for word in ("today", "asap", "immediately", "urgent")
+    ) else 0
+
+    billing_issue = 8 if any(
+        word in t for word in (
+            "charged", "refund", "billing", "invoice", "payment", "twice"
+        )
+    ) else 0
+
     frustration = max(
         0,
         min(
@@ -118,32 +227,91 @@ def analyze_turn(text, history, cfg):
             + billing_issue
             + urgency
             + (10 if t.count("!") >= 2 else 0)
-            + n_cust * 4,
+            + n_cust * 4
+            + (20 if repeated_contact else 0)
+            + (15 if unresolved_issue else 0),
         ),
     )
+
+    if unresolved_problem and frustration <= 30:
+        frustration = 35
+
     emotion = (
         "Angry" if frustration >= 75
-        else "Frustrated" if frustration >= 50
-        else "Satisfied" if frustration <= 20
+        else "Frustrated" if frustration >= 35
+        else "Satisfied" if frustration <= 20 and pos > 0 and not unresolved_problem
         else "Neutral"
     )
+
     sentiment = {
         "Angry": "Negative",
         "Frustrated": "Negative",
         "Neutral": "Neutral",
         "Satisfied": "Positive",
     }[emotion]
-    intent = next(
-        (name for name, words in INTENTS.items() if any(word in t for word in words)),
-        "General inquiry",
+
+    account_access_cues = (
+        "password",
+        "reset link",
+        "forgot password",
+        "login",
+        "log in",
+        "sign in",
+        "signin",
+        "account access",
+        "registered email",
+        "unable to access",
+        "reset email",
+        "can't access",
+        "cannot access",
+        "unable to log in",
+        "unable to sign in",
+        "can't log in",
+        "cannot log in",
+        "can't sign in",
+        "cannot sign in",
+        "locked out",
+        "account locked",
     )
-    risk = max(0, min(100, int(frustration * 0.8 + neg * 6)))
+
+    if any(phrase in t for phrase in account_access_cues):
+        intent = "Account access"
+    else:
+        intent = next(
+            (
+                name for name, words in INTENTS.items()
+                if any(word in t for word in words)
+            ),
+            "General inquiry",
+        )
+
+    risk = max(
+        0,
+        min(
+            100,
+            int(
+                frustration * 0.8
+                + neg * 6
+                + (20 if repeated_contact else 0)
+                + (15 if unresolved_issue else 0)
+            ),
+        ),
+    )
 
     reasons = []
+
     if neg:
         reasons.append(f"{neg} negative cue(s) in the message")
-    if n_cust >= 3 and frustration >= 50:
-        reasons.append("customer has contacted repeatedly")
+
+    if unresolved_problem:
+        reasons.append("customer reports an unresolved problem")
+
+    if repeated_contact:
+        reasons.append("customer reports repeated contact")
+
+    if unresolved_issue:
+        reasons.append("previous issue remains unresolved")
+
     if any(word in t for word in ("cancel", "refund", "manager")):
         reasons.append("explicit churn/escalation request")
 
@@ -180,7 +348,6 @@ def evaluate_agent_reply(
     policies=None,
     product_name=None,
 ):
-    """Evaluate an agent reply across 8 coaching dimensions using CoachingResponseAgent."""
     return _coaching_agent.evaluate_reply(
         reply_text=text,
         customer_message=customer_message,
